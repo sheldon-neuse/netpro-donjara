@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>簡易ドンジャラ</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header>
+    <h1>簡易ドンジャラ</h1>
+    <div id="status">
+      <span id="playerName">名前：---</span>
+      <span id="playerCount">接続人数：0人</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- 相手 -->
+    <section id="opponent">
+      <h2>相手</h2>
+
+      <div class="hand opponent-hand">
+        <div class="tile back"></div>
+        <div class="tile back"></div>
+        <div class="tile back"></div>
+        <div class="tile back"></div>
+        <div class="tile back"></div>
+      </div>
+    </section>
+
+    <!-- 山札・捨て牌 -->
+    <section id="center">
+
+      <div class="deck">
+        <h3>山札</h3>
+        <button id="drawButton">牌を引く</button>
+      </div>
+
+      <div class="discard">
+        <h3>捨て牌</h3>
+        <div id="discardArea"></div>
+      </div>
+
+    </section>
+
+    <!-- 自分 -->
+    <section id="player">
+      <h2>自分</h2>
+
+      <div class="hand" id="myHand">
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
