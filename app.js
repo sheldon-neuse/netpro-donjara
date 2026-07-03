@@ -1,6 +1,8 @@
+// ライブラリの読み込み
 const express = require("express");
-const expressWs = require("express-ws");
+const expressWs = require("express-ws"); // ExpressでWebSocketを使えるようにするライブラリ
 
+// サーバ作成
 const app = express();
 expressWs(app);
 
@@ -13,12 +15,13 @@ app.use(express.static("public"));
 let players = [];
 let deck = [];
 
+// 山札作る
 function initDeck() {
     deck = [];
 
     const tiles = ["A", "B", "C", "D", "E"];
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 9; i++) {
         tiles.forEach(t => deck.push(t));
     }
 
@@ -47,6 +50,15 @@ app.ws("/ws", (ws, req) => {
 
         console.log(msg);
 
+        // ユーザ名
+        if(msg.type === "username") {
+            const user = players.find((p) => p.ws === ws);
+            if(user){
+                user.name = msg.name;
+            }
+            return;
+        }
+
         switch (msg.type) {
 
             case "username":
@@ -58,16 +70,16 @@ app.ws("/ws", (ws, req) => {
                 }
                 break;
 
-          case "draw":
-            {
-              const tile = deck.pop();
+            case "draw":
+                {
+                    const tile = deck.pop();
 
-              ws.send(JSON.stringify({
-                type: "drawResult",
-                tile
-              }));
-            }
-            break;
+                    ws.send(JSON.stringify({
+                        type: "drawResult",
+                        tile
+                    }));
+                }
+                break;
 
             case "discard":
                 console.log(getPlayerName(ws), "が牌を捨てました");
