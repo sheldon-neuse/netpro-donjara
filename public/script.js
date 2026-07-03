@@ -18,7 +18,10 @@ function addTileToHand(tile) {
     div.textContent = tile; // 文字を表示（変更予定）
 
     div.onclick = () => {
-        div.remove(); // クリックしたら捨てる（仮実装）
+        ws.send(JSON.stringify({ // サーバーに捨てる牌を送る
+            type: "discard",
+            index: index
+        }))
     };
 
     myHand.appendChild(div);
@@ -45,9 +48,4 @@ ws.onmessage = (event) => {
             });
             break;
     }
-};
-drawButton.onclick = () => {
-    ws.send(JSON.stringify({
-        type: "draw"
-    }));
 };

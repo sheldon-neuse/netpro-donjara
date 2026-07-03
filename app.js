@@ -14,6 +14,8 @@ app.use(express.static("public"));
 // 接続中のプレイヤー
 let players = [];
 let deck = [];
+let gameStarted = false; // ゲームスタートの管理
+let currentTurn = 0; // ターン管理
 
 // 山札作る
 function initDeck() {
@@ -59,19 +61,19 @@ app.ws("/ws", (ws, req) => {
                     if (player) {
                         player.name = msg.name; // ユーザ名の入力
 
-                        dealHand(player); // 接続時に自動配牌
-                        ws.send(JSON.stringify({
-                            type: "hand",
-                            hand: player.hand
-                        }));
+                        if(players.length === 2 && !gameStarted){
+                            startGame();
+                        }
                     }
                 }
                 break;
 
             case "draw":
                 {
-                    const player = players.find(p => p.ws === ws);
-                    if(!player) break;
+                    const player = players.find(p => p.ws === ws); // 引こうとしている人
+                    if(player !== players[currentTurn]){ // 現在のターンの人かどうか
+                        return;
+                    }
 
                     const tile = deck.pop();
 
@@ -79,15 +81,20 @@ app.ws("/ws", (ws, req) => {
                         type: "drawResult",
                         tile
                     }));
+
+                    currentTurn = (currentTurn + 1) % players.length;
                 }
                 break;
 
             case "discard":
-                console.log(getPlayerName(ws), "が牌を捨てました");
+                {
+                    const player = players.find(p => p.ws === ws);
+                    if(!player) break;
 
-                if(!player) break;
-
-                player.hand.splice(msg.index, 1);
+                    player.hand.splice(msg.index, 1);
+                    currentTurn = (currentTurn + 1) % players.length; // ターン切り替え
+                    drawTile(players[currentTurn]);
+                }
                 break;
         }
     });
@@ -133,6 +140,32 @@ function dealHand(player) { // 自動配牌
         if(deck.length === 0) break;
         player.hand.push(deck.pop());
     }
+}
+
+function startGame() {
+    initDeck(); // 山札をリセット
+
+    players.forEach(player => { // 全員に
+        dealHand(player); // 配牌
+        player.ws.send(JSON.stringify({ // プレイヤーそれぞれに
+            type: "hand",
+            hand: player.hand
+        }));
+    });
+    gameStarted = true;
+
+    drawTile(players[currentTurn]); // 親のプレイヤーが最初にツモる
+}
+
+function drawTile(){
+    if(deck.length === 0) return;
+    const tile = deck.pop();
+
+    player.hand.push(tile);
+    player.ws.send(JSON.stringify({
+        type: "hand",
+        hand: player.hand
+    }));
 }
 
 initDeck();
