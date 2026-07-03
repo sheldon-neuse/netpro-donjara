@@ -1,19 +1,31 @@
 const ws = new WebSocket("ws://localhost:3000/ws");
+ws.onopen = () => {
+    const name = prompt("名前を入力してください");
+
+    playerName.textContent = `名前：${name}`;
+
+    ws.send(JSON.stringify({ // JavaScriptのオブジェクトをJSON形式の文字列に変換する
+        type: "username",
+        name: name
+    }))
+};
 const myHand = document.getElementById("myHand");
 const drawButton = document.getElementById("drawButton");
+const playerName = document.getElementById("playerName"); // プレイヤー名
 function addTileToHand(tile) {
-    const div = document.createElement("div");
-    div.className = "tile";
-    div.textContent = tile;
+    const div = document.createElement("div"); // <div>を新しく作る
+    div.className = "tile"; // CSSの.tileを適用する
+    div.textContent = tile; // 文字を表示（変更予定）
 
     div.onclick = () => {
-        div.remove();
+        div.remove(); // クリックしたら捨てる（仮実装）
     };
 
     myHand.appendChild(div);
 }
 ws.onmessage = (event) => {
-    const msg = JSON.parse(event.data);
+    // サーバからws.send(...)されるとここ
+    const msg = JSON.parse(event.data); // JSONをJavaScriptのオブジェクトへ変換
 
     switch (msg.type) {
 
