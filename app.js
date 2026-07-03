@@ -40,7 +40,8 @@ app.ws("/ws", (ws, req) => {
 
     players.push({
         ws,
-        name: "名無し"
+        name: "名無し",
+        hand: []
     });
 
     broadcastPlayerCount();
@@ -50,15 +51,6 @@ app.ws("/ws", (ws, req) => {
 
         console.log(msg);
 
-        // ユーザ名
-        if(msg.type === "username") {
-            const user = players.find((p) => p.ws === ws);
-            if(user){
-                user.name = msg.name;
-            }
-            return;
-        }
-
         switch (msg.type) {
 
             case "username":
@@ -66,6 +58,7 @@ app.ws("/ws", (ws, req) => {
                     const player = players.find(p => p.ws === ws);
                     if (player) {
                         player.name = msg.name;
+                        dealHand(player);
                     }
                 }
                 break;
@@ -120,6 +113,17 @@ function broadcastPlayerCount() {
     });
 
 }
+
+function dealHand(player) {
+    player.hand = [];
+
+    for(let i = 0; i < 5; i ++){
+        const tile = deck.pop();
+        player.hand.push(tile);
+    }
+}
+
+initDeck();
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
