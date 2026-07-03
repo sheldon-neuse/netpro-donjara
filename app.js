@@ -57,14 +57,22 @@ app.ws("/ws", (ws, req) => {
                 {
                     const player = players.find(p => p.ws === ws);
                     if (player) {
-                        player.name = msg.name;
-                        dealHand(player);
+                        player.name = msg.name; // ユーザ名の入力
+
+                        dealHand(player); // 接続時に自動配牌
+                        ws.send(JSON.stringify({
+                            type: "hand",
+                            hand: player.hand
+                        }));
                     }
                 }
                 break;
 
             case "draw":
                 {
+                    const player = players.find(p => p.ws === ws);
+                    if(!player) break;
+
                     const tile = deck.pop();
 
                     ws.send(JSON.stringify({
@@ -76,6 +84,10 @@ app.ws("/ws", (ws, req) => {
 
             case "discard":
                 console.log(getPlayerName(ws), "が牌を捨てました");
+
+                if(!player) break;
+
+                player.hand.splice(msg.index, 1);
                 break;
         }
     });
@@ -105,7 +117,7 @@ function broadcast(data) {
     });
 }
 
-function broadcastPlayerCount() {
+function broadcastPlayerCount() { // プレイヤー人数
 
     broadcast({
         type: "count",
@@ -114,12 +126,12 @@ function broadcastPlayerCount() {
 
 }
 
-function dealHand(player) {
+function dealHand(player) { // 自動配牌
     player.hand = [];
 
     for(let i = 0; i < 5; i ++){
-        const tile = deck.pop();
-        player.hand.push(tile);
+        if(deck.length === 0) break;
+        player.hand.push(deck.pop());
     }
 }
 

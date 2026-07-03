@@ -37,6 +37,13 @@ ws.onmessage = (event) => {
             document.getElementById("playerCount").textContent =
                 `接続人数：${msg.count}人`;
             break;
+
+        case "hand":
+            myHand.innerHTML = "";
+            msg.hand.forEach(tile => {
+                addTileToHand(tile);
+            });
+            break;
     }
 };
 drawButton.onclick = () => {
