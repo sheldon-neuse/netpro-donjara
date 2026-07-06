@@ -113,7 +113,7 @@ function getPlayerName(ws) {
     return player ? player.name : "名無し";
 }
 
-function broadcast(data) {
+function broadcast(data) { // 全員に送る
 
     const message = JSON.stringify(data);
 
