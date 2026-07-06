@@ -86,19 +86,25 @@ app.ws("/ws", (ws, req) => {
 
             case "discard":
                 {
-                    const player = players.find(p => p.ws === ws)[0];
+                    const player = players.find(p => p.ws === ws);
                     if(player !== players[currentTurn]){
                         break;
                     }
 
-                    const discardedTile = player.hand.splice(msg.index, 1);
+                    const discardedTile = player.hand.splice(msg.index, 1)[0];
                     discardPile.push(discardedTile);
+                    broadcast({
+                        type: "discard",
+                        tile: discardedTile,
+                        player: player.name
+                    });
                     player.ws.send(JSON.stringify({
                         type: "hand",
                         hand: player.hand
                     }));
                     currentTurn = (currentTurn + 1) % players.length; // ターン切り替え
                     drawTile(players[currentTurn]);
+                    sendTurn();
                 }
                 break;
         }
@@ -108,6 +114,11 @@ app.ws("/ws", (ws, req) => {
         console.log("切断");
 
         players = players.filter(p => p.ws !== ws);
+
+        if (players.length < 2) {
+            gameStarted = false;
+            currentTurn = 0;
+        }
 
         broadcastPlayerCount();
     });
@@ -138,6 +149,15 @@ function broadcastPlayerCount() { // プレイヤー人数
 
 }
 
+function sendTurn() {
+    players.forEach((player, index) => {
+        player.ws.send(JSON.stringify({
+            type: "turn",
+            myTurn: index === currentTurn
+        }));
+    });
+}
+
 function dealHand(player) { // 自動配牌
     player.hand = [];
 
@@ -159,10 +179,15 @@ function startGame() {
     });
     gameStarted = true;
 
+    sendTurn();
+
     drawTile(players[currentTurn]); // 親のプレイヤーが最初にツモる
 }
 
 function drawTile(player){
+    if(!player){
+        return;
+    }
     if(deck.length === 0) return;
     const tile = deck.pop();
 
