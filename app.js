@@ -16,16 +16,32 @@ let players = [];
 let deck = [];
 let gameStarted = false; // ゲームスタートの管理
 let currentTurn = 0; // ターン管理
+let discardPile = []; // 捨て牌管理
 
 // 山札作る
 function initDeck() {
     deck = [];
 
-    const tiles = ["A", "B", "C", "D", "E"];
+    const characters = [
+        "cat",
+        "dog",
+        "karaage",
+        "kitasenju",
+        "niwa",
+        "pc",
+        "pig",
+        "ramen",
+        "tdu"
+    ];
 
-    for (let i = 0; i < 9; i++) {
-        tiles.forEach(t => deck.push(t));
-    }
+    characters.forEach(character => {
+        for (let number = 1; number <= 9; number++) {
+            deck.push({
+                character,
+                number
+            })
+        }
+    })
 
     shuffle(deck);
 }
@@ -68,30 +84,19 @@ app.ws("/ws", (ws, req) => {
                 }
                 break;
 
-            case "draw":
-                {
-                    const player = players.find(p => p.ws === ws); // 引こうとしている人
-                    if(player !== players[currentTurn]){ // 現在のターンの人かどうか
-                        return;
-                    }
-
-                    const tile = deck.pop();
-
-                    ws.send(JSON.stringify({
-                        type: "drawResult",
-                        tile
-                    }));
-
-                    currentTurn = (currentTurn + 1) % players.length;
-                }
-                break;
-
             case "discard":
                 {
-                    const player = players.find(p => p.ws === ws);
-                    if(!player) break;
+                    const player = players.find(p => p.ws === ws)[0];
+                    if(player !== players[currentTurn]){
+                        break;
+                    }
 
-                    player.hand.splice(msg.index, 1);
+                    const discardedTile = player.hand.splice(msg.index, 1);
+                    discardPile.push(discardedTile);
+                    player.ws.send(JSON.stringify({
+                        type: "hand",
+                        hand: player.hand
+                    }));
                     currentTurn = (currentTurn + 1) % players.length; // ターン切り替え
                     drawTile(players[currentTurn]);
                 }
@@ -136,7 +141,7 @@ function broadcastPlayerCount() { // プレイヤー人数
 function dealHand(player) { // 自動配牌
     player.hand = [];
 
-    for(let i = 0; i < 5; i ++){
+    for(let i = 0; i < 8; i ++){
         if(deck.length === 0) break;
         player.hand.push(deck.pop());
     }
@@ -157,7 +162,7 @@ function startGame() {
     drawTile(players[currentTurn]); // 親のプレイヤーが最初にツモる
 }
 
-function drawTile(){
+function drawTile(player){
     if(deck.length === 0) return;
     const tile = deck.pop();
 
