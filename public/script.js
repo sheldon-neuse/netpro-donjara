@@ -65,6 +65,7 @@ ws.onmessage = (event) => {
             number.textContent = msg.tile.number;
             const img = document.createElement("img");
             img.src = `images/${msg.tile.character}.png`;
+            div.classList.add(tile.character);
             div.appendChild(number);
             div.appendChild(img);
             discardArea.appendChild(div);
