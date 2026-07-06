@@ -1,23 +1,62 @@
 .tile {
-    width: 60px;
-    height: 80px;
-    border: 1px solid #333;
+    width: 90px;
+    height: 120px;
+    border: 2px solid #333;
+    border-radius: 10px;
     margin: 4px;
+    background: white;
     display: inline-block;
     position: relative;
-    background: white;
+    cursor: pointer;
 }
 
 .tile img {
     width: 100%;
-    height: 60px;
-    object-fit: cover;
+    height: 90px;
+    object-fit: contain;
 }
 
 .tile-number {
     position: absolute;
-    bottom: 2px;
-    right: 4px;
+    top: 4px;
+    left: 6px;
+    font-size: 20px;
     font-weight: bold;
-    font-size: 14px;
+    z-index: 2;
+}
+
+.tile.cat {
+    background: #ff9999;
+}
+
+.tile.dog {
+    background: #ff77ff;
+}
+
+.tile.karaage {
+    background: #ffaa55;
+}
+
+.tile.kitasenju {
+    background: #ffffff;
+}
+
+.tile.niwa {
+    background: #555555;
+}
+
+.tile.pc {
+    background: #5555ff;
+}
+
+.tile.tdu {
+    background: #333399;
+}
+
+.tile.ramen {
+    background: #ffff55;
+}
+
+.tile.pig {
+    background: #55ff55;
 }

@@ -10,12 +10,17 @@ ws.onopen = () => {
     }))
 };
 const myHand = document.getElementById("myHand");
-const drawButton = document.getElementById("drawButton");
 const playerName = document.getElementById("playerName"); // プレイヤー名
-function addTileToHand(tile) {
+function addTileToHand(tile, index) {
     const div = document.createElement("div"); // <div>を新しく作る
     div.className = "tile"; // CSSの.tileを適用する
-    div.textContent = tile; // 文字を表示（変更予定）
+    const number = document.createElement("div");
+    number.className = "tile-number";
+    number.textContent = tile.number;
+    const img = document.createElement("img");
+    img.src = `images/${tile.character}.png`;
+    div.appendChild(number);
+    div.appendChild(img);
 
     div.onclick = () => {
         ws.send(JSON.stringify({ // サーバーに捨てる牌を送る
@@ -43,8 +48,8 @@ ws.onmessage = (event) => {
 
         case "hand":
             myHand.innerHTML = "";
-            msg.hand.forEach(tile => {
-                addTileToHand(tile);
+            msg.hand.forEach((tile, index) => {
+                addTileToHand(tile, index);
             });
             break;
     }
