@@ -16,9 +16,9 @@ const playerName = document.getElementById("playerName"); // プレイヤー名
 const myDiscardArea = document.getElementById("myDiscardArea"); // 自分の捨て牌
 const opponentDiscardArea = document.getElementById("opponentDiscardArea"); // 相手の捨て牌
 let myTurn = false; // クライアントでもターン管理
-function addTileToHand(tile, index) {
-    const div = document.createElement("div"); // <div>を新しく作る
-    div.className = "tile"; // CSSの.tileを適用する
+function createTileElement(tile){
+    const div = document.createElement("div");
+    div.className = "tile";
     const number = document.createElement("div");
     number.className = "tile-number";
     number.textContent = tile.number;
@@ -27,17 +27,18 @@ function addTileToHand(tile, index) {
     div.classList.add(tile.character);
     div.appendChild(number);
     div.appendChild(img);
-
+    return div;
+}
+function addTileToHand(tile, index) {
+    const div = createTileElement(tile);
     div.onclick = () => {
-
         if(!myTurn){
             return;
         }
-
         ws.send(JSON.stringify({ // サーバーに捨てる牌を送る
             type: "discard",
             index: index
-        }))
+        }));
     };
 
     myHand.appendChild(div);
