@@ -1,8 +1,10 @@
 const ws = new WebSocket("ws://localhost:3000/ws");
+let myName = "";
 ws.onopen = () => {
     const name = prompt("名前を入力してください") || "名無し";
 
     playerName.textContent = `名前：${name}`;
+    myName = name;
 
     ws.send(JSON.stringify({ // JavaScriptのオブジェクトをJSON形式の文字列に変換する
         type: "username",
@@ -11,7 +13,8 @@ ws.onopen = () => {
 };
 const myHand = document.getElementById("myHand");
 const playerName = document.getElementById("playerName"); // プレイヤー名
-const discardArea = document.getElementById("discardArea"); // 捨て牌
+const myDiscardArea = document.getElementById("myDiscardArea"); // 自分の捨て牌
+const opponentDiscardArea = document.getElementById("opponentDiscardArea"); // 相手の捨て牌
 let myTurn = false; // クライアントでもターン管理
 function addTileToHand(tile, index) {
     const div = document.createElement("div"); // <div>を新しく作る
@@ -57,18 +60,15 @@ ws.onmessage = (event) => {
             });
             break;
 
-        case "discard": { // 捨て牌表示
-            const div = document.createElement("div");
-            div.className = "tile";
-            const number = document.createElement("div");
-            number.className = "tile-number";
-            number.textContent = msg.tile.number;
-            const img = document.createElement("img");
-            img.src = `images/${msg.tile.character}.png`;
-            div.classList.add(tile.character);
-            div.appendChild(number);
-            div.appendChild(img);
-            discardArea.appendChild(div);
+        case "discard": {
+            const div = createTileElement(msg.tile);
+            if (msg.player === myName) {
+                myDiscardArea.appendChild(div);
+            }
+            else {
+                div.classList.add("opponent-tile");
+                opponentDiscardArea.appendChild(div);
+            }
             break;
         }
 
