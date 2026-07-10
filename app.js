@@ -59,7 +59,8 @@ app.ws("/ws", (ws, req) => {
     players.push({
         ws,
         name: "名無し",
-        hand: []
+        hand: [],
+        drawTile: null
     });
 
     broadcastPlayerCount();
@@ -91,16 +92,30 @@ app.ws("/ws", (ws, req) => {
                         break;
                     }
 
-                    const discardedTile = player.hand.splice(msg.index, 1)[0];
+                    let discardedTile;
+                    if(msg.index === -1){ // ツモ牌を捨てるとき
+                        discardedTile = player.drawTile;
+                        player.drawTile = null;
+                    } else { // 持ち牌から捨てるとき
+                        discardedTile = player.hand.splice(msg.index, 1)[0];
+                        if (player.drawTile) { // ツモ牌があるなら、持ち牌に加える
+                            player.hand.push(player.drawTile);
+                        }
+                        sortHand(player.hand); // 持ち牌をソートする
+                        player.drawTile = null;
+                    }
                     discardPile.push(discardedTile);
-                    broadcast({
+                    broadcast({ // 捨て牌を全員に知らせる
                         type: "discard",
                         tile: discardedTile,
                         player: player.name
                     });
-                    player.ws.send(JSON.stringify({
+                    const opponent = players.find(p => p !== player);
+                    player.ws.send(JSON.stringify({ // そのターンの人の手札管理
                         type: "hand",
-                        hand: player.hand
+                        hand: player.hand,
+                        drawTile: player.drawTile,
+                        opponentCount: opponent.hand.length + (opponent.drawTile ? 1 : 0)
                     }));
                     currentTurn = (currentTurn + 1) % players.length; // ターン切り替え
                     drawTile(players[currentTurn]);
@@ -149,6 +164,17 @@ function broadcastPlayerCount() { // プレイヤー人数
 
 }
 
+function sortHand(hand){ // 持ち牌ソート
+    hand.sort((a, b) => {
+        if(a.character === b.character) { // 絵柄が同じときは数字順
+            return a.number - b.number;
+        }
+
+        // 絵柄が違うなら絵柄順
+        return a.character.localeCompare(b.character);
+    })
+}
+
 function sendTurn() {
     players.forEach((player, index) => {
         player.ws.send(JSON.stringify({
@@ -160,6 +186,7 @@ function sendTurn() {
 
 function dealHand(player) { // 自動配牌
     player.hand = [];
+    player.drawTile = null;
 
     for(let i = 0; i < 8; i ++){
         if(deck.length === 0) break;
@@ -172,9 +199,12 @@ function startGame() {
 
     players.forEach(player => { // 全員に
         dealHand(player); // 配牌
+        sortHand(player.hand); // 持ち牌ソート
         player.ws.send(JSON.stringify({ // プレイヤーそれぞれに
             type: "hand",
-            hand: player.hand
+            hand: player.hand,
+            drawTile: player.drawTile,
+            opponentCount: opponent.hand.length + (opponent.drawTile ? 1 : 0)
         }));
     });
     gameStarted = true;
@@ -184,17 +214,25 @@ function startGame() {
     drawTile(players[currentTurn]); // 親のプレイヤーが最初にツモる
 }
 
-function drawTile(player){
+function drawTile(player){ // ツモる
     if(!player){
         return;
     }
     if(deck.length === 0) return;
+
+    if(player.drawTile) {
+        return;
+    }
+
     const tile = deck.pop();
 
-    player.hand.push(tile);
+    const opponent = players.find(p => p !== player);
+    player.drawTile = tile;
     player.ws.send(JSON.stringify({
         type: "hand",
-        hand: player.hand
+        hand: player.hand,
+        drawTile: player.drawTile,
+        opponentCount: opponent.hand.length + (opponent.drawTile ? 1 : 0)
     }));
 }
 

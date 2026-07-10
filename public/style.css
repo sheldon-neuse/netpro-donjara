@@ -17,6 +17,11 @@
     object-fit: contain;
 }
 
+#drawTileArea{
+    display: inline-block;
+    margin-left: 30px;
+}
+
 .tile-number {
     position: absolute;
     top: 4px;
@@ -28,6 +33,21 @@
 
 .opponent-tile {
     transform: rotate(180deg);
+}
+
+.tile.back{
+    background: #2d2d2d;
+    border: 2px solid #000;
+}
+
+.tile.back img{
+    display: none;
+}
+
+#opponentHand{
+    display:flex;
+    justify-content:center;
+    gap:6px;
 }
 
 .tile.cat {

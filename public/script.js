@@ -15,8 +15,11 @@ const myHand = document.getElementById("myHand");
 const playerName = document.getElementById("playerName"); // プレイヤー名
 const myDiscardArea = document.getElementById("myDiscardArea"); // 自分の捨て牌
 const opponentDiscardArea = document.getElementById("opponentDiscardArea"); // 相手の捨て牌
+const drawTileArea = document.getElementById("drawTileArea"); // ツモ牌
+const opponentHand = document.getElementById("opponentHand");
 let myTurn = false; // クライアントでもターン管理
-function createTileElement(tile){
+
+function createTileElement(tile){ // 牌を表示する
     const div = document.createElement("div");
     div.className = "tile";
     const number = document.createElement("div");
@@ -29,7 +32,8 @@ function createTileElement(tile){
     div.appendChild(img);
     return div;
 }
-function addTileToHand(tile, index) {
+
+function addTileToHand(tile, index) { // 牌のクリック処理
     const div = createTileElement(tile);
     div.onclick = () => {
         if(!myTurn){
@@ -43,6 +47,17 @@ function addTileToHand(tile, index) {
 
     myHand.appendChild(div);
 }
+
+function updateOpponentHand(count){ // 相手の裏面になっている牌の表示
+    opponentHand.innerHTML = "";
+
+    for(let i = 0; i < count; i++){
+        const div = document.createElement("div");
+        div.className = "tile back";
+        opponentHand.appendChild(div);
+    }
+}
+
 ws.onmessage = (event) => {
     // サーバからws.send(...)されるとここ
     const msg = JSON.parse(event.data); // JSONをJavaScriptのオブジェクトへ変換
@@ -56,9 +71,25 @@ ws.onmessage = (event) => {
 
         case "hand":
             myHand.innerHTML = "";
+            drawTileArea.innerHTML = "";
             msg.hand.forEach((tile, index) => {
                 addTileToHand(tile, index);
             });
+            if (msg.drawTile) {
+                const div = createTileElement(msg.drawTile);
+                div.classList.add("draw-tile");
+                div.onclick = () => {
+                    if (!myTurn) {
+                        return;
+                    }
+                    ws.send(JSON.stringify({
+                        type: "discard",
+                        index: -1
+                    }));
+                };
+                drawTileArea.appendChild(div);
+            }
+            updateOpponentHand(msg.opponentCount);
             break;
 
         case "discard": {
