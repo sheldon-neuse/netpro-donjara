@@ -110,13 +110,7 @@ app.ws("/ws", (ws, req) => {
                         tile: discardedTile,
                         player: player.name
                     });
-                    const opponent = players.find(p => p !== player);
-                    player.ws.send(JSON.stringify({ // そのターンの人の手札管理
-                        type: "hand",
-                        hand: player.hand,
-                        drawTile: player.drawTile,
-                        opponentCount: opponent.hand.length + (opponent.drawTile ? 1 : 0)
-                    }));
+                    sendHand(player);
                     currentTurn = (currentTurn + 1) % players.length; // ターン切り替え
                     drawTile(players[currentTurn]);
                     sendTurn();
@@ -156,12 +150,23 @@ function broadcast(data) { // 全員に送る
 }
 
 function broadcastPlayerCount() { // プレイヤー人数
-
     broadcast({
         type: "count",
         count: players.length
     });
+}
 
+function sendHand(player) {
+    const opponent = players.find(p => p !== player);
+
+    player.ws.send(JSON.stringify({
+        type: "hand",
+        hand: player.hand,
+        drawTile: player.drawTile,
+        opponentCount: opponent
+            ? opponent.hand.length + (opponent.drawTile ? 1 : 0)
+            : 0
+    }));
 }
 
 function sortHand(hand){ // 持ち牌ソート
@@ -200,12 +205,7 @@ function startGame() {
     players.forEach(player => { // 全員に
         dealHand(player); // 配牌
         sortHand(player.hand); // 持ち牌ソート
-        player.ws.send(JSON.stringify({ // プレイヤーそれぞれに
-            type: "hand",
-            hand: player.hand,
-            drawTile: player.drawTile,
-            opponentCount: opponent.hand.length + (opponent.drawTile ? 1 : 0)
-        }));
+        sendHand(player);
     });
     gameStarted = true;
 
@@ -215,25 +215,14 @@ function startGame() {
 }
 
 function drawTile(player){ // ツモる
-    if(!player){
-        return;
-    }
-    if(deck.length === 0) return;
-
-    if(player.drawTile) {
+    if(!player || deck.length === 0 || player.drawTile){
         return;
     }
 
     const tile = deck.pop();
 
-    const opponent = players.find(p => p !== player);
     player.drawTile = tile;
-    player.ws.send(JSON.stringify({
-        type: "hand",
-        hand: player.hand,
-        drawTile: player.drawTile,
-        opponentCount: opponent.hand.length + (opponent.drawTile ? 1 : 0)
-    }));
+    sendHand(player);
 }
 
 initDeck();
