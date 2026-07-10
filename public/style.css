@@ -44,6 +44,10 @@
     display: none;
 }
 
+.tile.back.draw-tile{
+    margin-left:30px;
+}
+
 #opponentHand{
     display:flex;
     justify-content:center;

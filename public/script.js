@@ -48,12 +48,19 @@ function addTileToHand(tile, index) { // 牌のクリック処理
     myHand.appendChild(div);
 }
 
-function updateOpponentHand(count){ // 相手の裏面になっている牌の表示
+function updateOpponentHand(count) { // 相手の裏面になっている牌の表示
     opponentHand.innerHTML = "";
 
-    for(let i = 0; i < count; i++){
+    for (let i = 0; i < count; i++) {
+
         const div = document.createElement("div");
         div.className = "tile back";
+
+        // 一番右＝ツモ牌
+        if (i === count - 1 && count >= 9) {
+            div.classList.add("draw-tile");
+        }
+
         opponentHand.appendChild(div);
     }
 }
