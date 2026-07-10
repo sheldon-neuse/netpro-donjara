@@ -17,6 +17,8 @@ let deck = [];
 let gameStarted = false; // ゲームスタートの管理
 let currentTurn = 0; // ターン管理
 let discardPile = []; // 捨て牌管理
+let lastDiscard = null; // 最後に捨てられた牌
+let waitingSteal = false; // 横取り待ち状態かの判定
 
 // 山札作る
 function initDeck() {
@@ -78,7 +80,7 @@ app.ws("/ws", (ws, req) => {
                     if (player) {
                         player.name = msg.name; // ユーザ名の入力
 
-                        if(players.length === 2 && !gameStarted){
+                        if (players.length === 2 && !gameStarted) {
                             startGame();
                         }
                     }
@@ -88,15 +90,18 @@ app.ws("/ws", (ws, req) => {
             case "discard":
                 {
                     const player = players.find(p => p.ws === ws);
-                    if(player !== players[currentTurn]){
+                    if (player !== players[currentTurn] || waitingSteal) {
                         break;
                     }
 
                     let discardedTile;
-                    if(msg.index === -1){ // ツモ牌を捨てるとき
+                    if (msg.index === -1) { // ツモ牌を捨てるとき
                         discardedTile = player.drawTile;
                         player.drawTile = null;
                     } else { // 持ち牌から捨てるとき
+                        if (msg.index >= player.hand.length || msg.index < -1) {
+                            break;
+                        }
                         discardedTile = player.hand.splice(msg.index, 1)[0];
                         if (player.drawTile) { // ツモ牌があるなら、持ち牌に加える
                             player.hand.push(player.drawTile);
@@ -104,15 +109,95 @@ app.ws("/ws", (ws, req) => {
                         sortHand(player.hand); // 持ち牌をソートする
                         player.drawTile = null;
                     }
-                    discardPile.push(discardedTile);
+
+                    discardPile.push(discardedTile); // 捨て牌配列に追加
+
+                    lastDiscard = {
+                        tile: discardedTile,
+                        player: player
+                    }
+
                     broadcast({ // 捨て牌を全員に知らせる
                         type: "discard",
                         tile: discardedTile,
                         player: player.name
                     });
-                    sendHand(player);
+
+                    const opponent = players.find(p => p !== player);
+                    if (opponent && canSteal(opponent)) {
+
+                        waitingSteal = true;
+
+                        updateHands();
+
+                        opponent.ws.send(JSON.stringify({
+                            type: "canSteal",
+                            tile: discardedTile
+                        }));
+                        // 横取り可能ならツモらない
+                        return;
+                    }
+
+                    waitingSteal = false;
                     currentTurn = (currentTurn + 1) % players.length; // ターン切り替え
                     drawTile(players[currentTurn]);
+                    updateHands();
+                    sendTurn();
+                }
+                break;
+
+            case "steal":
+                {
+                    const player = players.find(p => p.ws === ws);
+                    const opponent = players.find(p => p !== player);
+                    if (!player) {
+                        break;
+                    }
+                    // 横取り待ちじゃない || 最後の捨て牌がない || 本当に横取りできるか再確認 || 自分の捨て牌ではない
+                    if (!waitingSteal || !lastDiscard || !canSteal(player) || lastDiscard.player === player) {
+                        break;
+                    }
+
+                    waitingSteal = false;
+                    // 捨て牌を手札へ追加
+                    player.hand.push(lastDiscard.tile);
+                    sortHand(player.hand);
+
+                    const discarder = lastDiscard.player;
+                    // 場から削除
+                    discardPile.pop();
+                    broadcast({
+                        type: "removeDiscard",
+                        player: discarder.name
+                    })
+                    lastDiscard = null;
+                    // 手札更新
+                    updateHands();
+                    // 横取りした人のターン
+                    currentTurn = players.indexOf(player);
+                    sendTurn();
+                }
+                break;
+
+            case "passSteal":
+                {
+                    const player = players.find(p => p.ws === ws);
+                    if (!waitingSteal || player === lastDiscard.player) {
+                        break;
+                    }
+
+                    const discarder = lastDiscard.player;
+
+                    waitingSteal = false;
+
+                    currentTurn = (currentTurn + 1) % players.length;
+
+                    drawTile(players[currentTurn]);
+
+                    updateHands();
+
+                    lastDiscard = null;
+
                     sendTurn();
                 }
                 break;
@@ -127,6 +212,9 @@ app.ws("/ws", (ws, req) => {
         if (players.length < 2) {
             gameStarted = false;
             currentTurn = 0;
+            broadcast({
+                type: "gameEnd"
+            });
         }
 
         broadcastPlayerCount();
@@ -169,15 +257,26 @@ function sendHand(player) {
     }));
 }
 
-function sortHand(hand){ // 持ち牌ソート
+function sortHand(hand) { // 持ち牌ソート
     hand.sort((a, b) => {
-        if(a.character === b.character) { // 絵柄が同じときは数字順
+        if (a.character === b.character) { // 絵柄が同じときは数字順
             return a.number - b.number;
         }
 
         // 絵柄が違うなら絵柄順
         return a.character.localeCompare(b.character);
     })
+}
+
+function canSteal(player) { // 横取りできるかどうか
+    if (!player || !lastDiscard) {
+        return false;
+    }
+
+    const count = player.hand.filter(tile =>
+        tile.character === lastDiscard.tile.character
+    ).length;
+    return count >= 2;
 }
 
 function sendTurn() {
@@ -193,14 +292,19 @@ function dealHand(player) { // 自動配牌
     player.hand = [];
     player.drawTile = null;
 
-    for(let i = 0; i < 8; i ++){
-        if(deck.length === 0) break;
+    for (let i = 0; i < 8; i++) {
+        if (deck.length === 0) break;
         player.hand.push(deck.pop());
     }
 }
 
 function startGame() {
-    initDeck(); // 山札をリセット
+    // 全部を山札をリセット
+    initDeck();
+    discardPile = [];
+    lastDiscard = null;
+    waitingSteal = false;
+    currentTurn = 0;
 
     players.forEach(player => { // 全員に
         dealHand(player); // 配牌
@@ -208,14 +312,24 @@ function startGame() {
         sendHand(player);
     });
     gameStarted = true;
+    
+    broadcast({
+        type: "clearDiscard"
+    });
 
     sendTurn();
 
     drawTile(players[currentTurn]); // 親のプレイヤーが最初にツモる
 }
 
-function drawTile(player){ // ツモる
-    if(!player || deck.length === 0 || player.drawTile){
+function drawTile(player) { // ツモる
+    if (!player || player.drawTile) {
+        return;
+    }
+    if (deck.length === 0) {
+        broadcast({
+            type: "drawGame"
+        });
         return;
     }
 
@@ -223,6 +337,11 @@ function drawTile(player){ // ツモる
 
     player.drawTile = tile;
     sendHand(player);
+}
+
+function updateHands() {
+    // 両者の画面を更新
+    players.forEach(sendHand);
 }
 
 initDeck();

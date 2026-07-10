@@ -16,7 +16,9 @@ const playerName = document.getElementById("playerName"); // プレイヤー名
 const myDiscardArea = document.getElementById("myDiscardArea"); // 自分の捨て牌
 const opponentDiscardArea = document.getElementById("opponentDiscardArea"); // 相手の捨て牌
 const drawTileArea = document.getElementById("drawTileArea"); // ツモ牌
-const opponentHand = document.getElementById("opponentHand");
+const opponentHand = document.getElementById("opponentHand"); // 相手の持ち牌
+const stealButton = document.getElementById("stealButton"); // 横取りボタン
+const passStealButton = document.getElementById("passStealButton"); // 横取りしないボタン
 let myTurn = false; // クライアントでもターン管理
 
 function createTileElement(tile){ // 牌を表示する
@@ -52,18 +54,35 @@ function updateOpponentHand(count) { // 相手の裏面になっている牌の�
     opponentHand.innerHTML = "";
 
     for (let i = 0; i < count; i++) {
-
         const div = document.createElement("div");
         div.className = "tile back";
-
         // 一番右＝ツモ牌
         if (i === count - 1 && count >= 9) {
             div.classList.add("draw-tile");
         }
-
         opponentHand.appendChild(div);
     }
 }
+
+stealButton.onclick = () => {
+    // 横取りボタンを押したとき
+    ws.send(JSON.stringify({
+        type: "steal"
+    }));
+
+    stealButton.style.display = "none";
+    passStealButton.style.display = "none";
+};
+
+passStealButton.onclick = () => {
+    // 横取りしないボタンを押したとき
+    ws.send(JSON.stringify({
+        type: "passSteal"
+    }));
+
+    stealButton.style.display = "none";
+    passStealButton.style.display = "none";
+};
 
 ws.onmessage = (event) => {
     // サーバからws.send(...)されるとここ
@@ -77,6 +96,9 @@ ws.onmessage = (event) => {
             break;
 
         case "hand":
+            stealButton.style.display = "none";
+            passStealButton.style.display = "none";
+
             myHand.innerHTML = "";
             drawTileArea.innerHTML = "";
             msg.hand.forEach((tile, index) => {
@@ -111,8 +133,40 @@ ws.onmessage = (event) => {
             break;
         }
 
+        case "removeDiscard":
+            if (msg.player === myName) {
+                if (myDiscardArea.lastElementChild) {
+                    myDiscardArea.removeChild(myDiscardArea.lastElementChild);
+                }
+            } else {
+                if (opponentDiscardArea.lastElementChild) {
+                    opponentDiscardArea.removeChild(opponentDiscardArea.lastElementChild);
+                }
+            }
+            break;
+
         case "turn":
             myTurn = msg.myTurn;
+            break;
+
+        case "canSteal":
+            if(!myTurn) {
+                stealButton.style.display = "inline-block";
+                passStealButton.style.display = "inline-block";
+            }
+            break;
+
+            case "clearDiscard":
+                myDiscardArea.innerHTML = "";
+                opponentDiscardArea.innerHTML = "";
+                break;
+
+        case "gameEnd":
+            alert("相手が切断しました");
+            break;
+
+        case "drawGame":
+            alert("山札がなくなりました。引き分けです。");
             break;
     }
 };
