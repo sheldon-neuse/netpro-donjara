@@ -78,17 +78,6 @@
     gap:10px;
 }
 
-.stolen-tile{
-    transform: rotate(90deg);
-    width:120px;
-    height:90px;
-    margin:15px;
-}
-
-.opponent-tile.stolen-tile{
-    transform: rotate(270deg);
-}
-
 .tile.cat {
     background: #ff9999;
 }
