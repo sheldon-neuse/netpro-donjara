@@ -95,59 +95,9 @@ app.ws("/ws", (ws, req) => {
                     if (player !== players[currentTurn] || waitingSteal) {
                         break;
                     }
-                    if(player.reach && msg.index !== -1) {
-                        break;
-                    }
+                    
+                    discardTile(player, msg.index);
 
-                    let discardedTile;
-                    if (msg.index === -1) { // ツモ牌を捨てるとき
-                        discardedTile = player.drawTile;
-                        player.drawTile = null;
-                    } else { // 持ち牌から捨てるとき
-                        if (msg.index >= player.hand.length || msg.index < -1) {
-                            break;
-                        }
-                        discardedTile = player.hand.splice(msg.index, 1)[0];
-                        if (player.drawTile) { // ツモ牌があるなら、持ち牌に加える
-                            player.hand.push(player.drawTile);
-                        }
-                        sortHand(player.hand); // 持ち牌をソートする
-                        player.drawTile = null;
-                    }
-
-                    discardPile.push(discardedTile); // 捨て牌配列に追加
-
-                    lastDiscard = {
-                        tile: discardedTile,
-                        player: player
-                    }
-
-                    broadcast({ // 捨て牌を全員に知らせる
-                        type: "discard",
-                        tile: discardedTile,
-                        player: player.name
-                    });
-
-                    const opponent = players.find(p => p !== player);
-                    if (opponent && canSteal(opponent)) {
-
-                        waitingSteal = true;
-
-                        updateHands();
-
-                        opponent.ws.send(JSON.stringify({
-                            type: "canSteal",
-                            tile: discardedTile
-                        }));
-                        // 横取り可能ならツモらない
-                        return;
-                    }
-
-                    waitingSteal = false;
-                    currentTurn = (currentTurn + 1) % players.length; // ターン切り替え
-                    drawTile(players[currentTurn]);
-                    updateHands();
-                    sendTurn();
                 }
                 break;
 
@@ -226,10 +176,13 @@ app.ws("/ws", (ws, req) => {
                         break;
                     }
                     reach(player);
-                    // リーチした本人だけボタンを消す
                     player.ws.send(JSON.stringify({
                         type: "reached"
                     }));
+                    const index = getReachDiscardIndex(player);
+                    if(index !== -2) {
+                        discardTile(player, index);
+                    }
                 }
                 break;
 
@@ -394,7 +347,52 @@ function drawTile(player) { // ツモる
     const tile = deck.pop();
 
     player.drawTile = tile;
-    sendHand(player);
+    sendHands();
+}
+
+function discardTile(player, index) {
+    let discardedTile;
+    if (index === -1) {
+        // ツモ牌を捨てる
+        discardedTile = player.drawTile;
+        player.drawTile = null;
+    } else {
+        if (index >= player.hand.length || index < 0) {
+            return false;
+        }
+        discardedTile = player.hand.splice(index, 1)[0];
+        if (player.drawTile) { // ツモ牌があるなら、持ち牌に加える
+            player.hand.push(player.drawTile);
+        }
+        sortHand(player.hand);
+        player.drawTile = null;
+    }
+    discardPile.push(discardedTile);
+    lastDiscard = {
+        tile: discardedTile,
+        player: player
+    };
+    broadcast({ // 全員に捨て牌を知らせる
+        type: "discard",
+        tile: discardedTile,
+        player: player.name
+    });
+    const opponent = players.find(p => p !== player);
+    if (opponent && canSteal(opponent)) {
+        waitingSteal = true;
+        updateHands();
+        opponent.ws.send(JSON.stringify({
+            type: "canSteal",
+            tile: discardedTile
+        }));
+        return true;
+    }
+    waitingSteal = false;
+    currentTurn = (currentTurn + 1) % players.length;
+    drawTile(players[currentTurn]);
+    updateHands();
+    sendTurn();
+    return true;
 }
 
 function countGroups(tiles) { // 揃っている牌をカウントする
@@ -441,6 +439,35 @@ function reach(player) {
         type: "reach",
         player: player.name
     })
+}
+
+function getReachDiscardIndex(player) { // リーチ時のいらない牌を探す
+    const tiles = [...player.hand];
+    if (player.drawTile) {
+        tiles.push(player.drawTile);
+    }
+    const counts = {};
+    tiles.forEach(tile => {
+        counts[tile.character] = (counts[tile.character] || 0) + 1;
+    });
+    // 1枚だけ余っている牌
+    const target = tiles.find(tile => counts[tile.character] % 3 === 1);
+    if (!target) {
+        return -2;
+    }
+    // ツモ牌なら
+    if (
+        player.drawTile &&
+        player.drawTile.character === target.character &&
+        player.drawTile.number === target.number
+    ) {
+        return -1;
+    }
+    // 手牌の何番目か
+    return player.hand.findIndex(tile =>
+        tile.character === target.character &&
+        tile.number === target.number
+    );
 }
 
 function canWin(player) { // 勝ち条件の判定
