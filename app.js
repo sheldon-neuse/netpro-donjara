@@ -247,6 +247,8 @@ function broadcastPlayerCount() { // プレイヤー人数
 }
 
 function sendHand(player) {
+    console.log("sendHand", player);
+
     const opponent = players.find(p => p !== player);
 
     player.ws.send(JSON.stringify({
@@ -310,6 +312,8 @@ function dealHand(player) { // 自動配牌
 }
 
 function startGame() {
+    console.log(players);
+    console.log(players.length);
     // 全部を山札をリセット
     initDeck();
     discardPile = [];
@@ -330,6 +334,7 @@ function startGame() {
 
     sendTurn();
 
+    console.log(players[currentTurn]);
     drawTile(players[currentTurn]); // 親のプレイヤーが最初にツモる
 }
 
