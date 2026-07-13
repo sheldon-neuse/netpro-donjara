@@ -147,6 +147,8 @@ ws.onmessage = (event) => {
                 drawTileArea.appendChild(div);
             }
             updateOpponentHand(msg.opponentCount);
+            console.log(msg.melds);
+            console.log(msg.opponentMelds);
             break;
 
         case "discard": {
