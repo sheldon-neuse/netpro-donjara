@@ -1,4 +1,5 @@
-const ws = new WebSocket("ws://localhost:3000/ws");
+const protocol = location.protocol === "https:" ? "wss" : "ws";
+const ws = new WebSocket(`${protocol}://${location.host}/ws`);
 let myName = "";
 ws.onopen = () => {
     const name = prompt("名前を入力してください") || "名無し";
