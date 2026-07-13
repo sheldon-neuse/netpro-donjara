@@ -347,7 +347,7 @@ function drawTile(player) { // ツモる
     const tile = deck.pop();
 
     player.drawTile = tile;
-    sendHands();
+    sendHand();
 }
 
 function discardTile(player, index) {
