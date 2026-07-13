@@ -106,11 +106,11 @@ ws.onmessage = (event) => {
             msg.melds.forEach(group => {
                 const row = document.createElement("div");
                 row.className = "meld-group";
-                group.forEach(tile => {
+                group.forEach((tile, index) => {
                     const div = createTileElement(tile);
                     div.classList.add("meld");
                     // 真ん中の牌だけ横向きにする
-                    if(index === group.length - 1) {
+                    if(index === 1) {
                         div.classList.add("stolen-tile");
                     }
                     row.appendChild(div);
@@ -123,10 +123,10 @@ ws.onmessage = (event) => {
             msg.opponentMelds.forEach(group => {
                 const row = document.createElement("div");
                 row.className = "meld-group";
-                group.forEach(tile => {
+                group.forEach((tile, index) => {
                     const div = createTileElement(tile);
                     div.classList.add("opponent-tile");
-                    if(index === group.length - 1) {
+                    if(index === 1) {
                         div.classList.add("stolen-tile");
                     }
                     row.appendChild(div);

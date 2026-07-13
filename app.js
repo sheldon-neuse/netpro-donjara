@@ -171,7 +171,11 @@ app.ws("/ws", (ws, req) => {
                         }
                     }
                     // 横取り牌として保存
-                    const meld = [...stealTiles, lastDiscard.tile];
+                    const meld = [
+                        stealTiles[0],
+                        lastDiscard.tile,
+                        stealTiles[1]
+                    ];
                     // 数字でもソート
                     meld.sort((a, b) => a.number - b.number);
                     player.melds.push(meld);

@@ -74,14 +74,19 @@
 
 .meld-group{
     display:flex;
-    gap:6px;
-    margin-bottom:10px;
+    align-items:flex-end;
+    gap:10px;
 }
 
-.stolen-tile {
+.stolen-tile{
     transform: rotate(90deg);
-    transform-origin: center;
-    margin: 20px 10px;
+    width:120px;
+    height:90px;
+    margin:15px;
+}
+
+.opponent-tile.stolen-tile{
+    transform: rotate(270deg);
 }
 
 .tile.cat {
