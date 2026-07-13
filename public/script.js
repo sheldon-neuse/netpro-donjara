@@ -109,6 +109,10 @@ ws.onmessage = (event) => {
                 group.forEach(tile => {
                     const div = createTileElement(tile);
                     div.classList.add("meld");
+                    // 真ん中の牌だけ横向きにする
+                    if(index === group.length - 1) {
+                        div.classList.add("stolen-tile");
+                    }
                     row.appendChild(div);
                 });
                 meldArea.appendChild(row);
@@ -122,6 +126,9 @@ ws.onmessage = (event) => {
                 group.forEach(tile => {
                     const div = createTileElement(tile);
                     div.classList.add("opponent-tile");
+                    if(index === group.length - 1) {
+                        div.classList.add("stolen-tile");
+                    }
                     row.appendChild(div);
                 });
                 opponentMeldArea.appendChild(row);
@@ -147,8 +154,6 @@ ws.onmessage = (event) => {
                 drawTileArea.appendChild(div);
             }
             updateOpponentHand(msg.opponentCount);
-            console.log(msg.melds);
-            console.log(msg.opponentMelds);
             break;
 
         case "discard": {

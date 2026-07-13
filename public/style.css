@@ -78,6 +78,12 @@
     margin-bottom:10px;
 }
 
+.stolen-tile {
+    transform: rotate(90deg);
+    transform-origin: center;
+    margin: 20px 10px;
+}
+
 .tile.cat {
     background: #ff9999;
 }

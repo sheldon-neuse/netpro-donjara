@@ -174,8 +174,6 @@ app.ws("/ws", (ws, req) => {
                     const meld = [...stealTiles, lastDiscard.tile];
                     // 数字でもソート
                     meld.sort((a, b) => a.number - b.number);
-                    console.log(stealTiles);
-                    console.log(player.melds);
                     player.melds.push(meld);
 
                     sortHand(player.hand);
