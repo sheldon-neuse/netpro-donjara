@@ -45,13 +45,37 @@
 }
 
 .tile.back.draw-tile{
-    margin-left:30px;
+    margin-left:60px;
 }
 
 #opponentHand{
     display:flex;
     justify-content:center;
     gap:6px;
+}
+
+#meldArea{
+    display:flex;
+    gap:8px;
+    margin-top:15px;
+    margin-left:80px;
+}
+
+#meldArea.tile{
+    cursor:default;
+    opacity:0.9;
+}
+
+#meldArea .tile,
+#opponentMeldArea .tile{
+    cursor:default;
+    pointer-events:none;
+}
+
+.meld-group{
+    display:flex;
+    gap:6px;
+    margin-bottom:10px;
 }
 
 .tile.cat {

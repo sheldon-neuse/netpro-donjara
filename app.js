@@ -62,7 +62,8 @@ app.ws("/ws", (ws, req) => {
         ws,
         name: "名無し",
         hand: [],
-        drawTile: null
+        drawTile: null,
+        melds: []
     });
 
     broadcastPlayerCount();
@@ -159,8 +160,22 @@ app.ws("/ws", (ws, req) => {
                     }
 
                     waitingSteal = false;
-                    // 捨て牌を手札へ追加
-                    player.hand.push(lastDiscard.tile);
+                    // 手札から同じキャラクターの牌を2枚取り出す
+                    const stealTiles = [];
+                    for (let i = player.hand.length - 1; i >= 0; i--) {
+                        if (
+                            player.hand[i].character === lastDiscard.tile.character &&
+                            stealTiles.length < 2
+                        ) {
+                            stealTiles.push(player.hand.splice(i, 1)[0]);
+                        }
+                    }
+                    // 横取り牌として保存
+                    const meld = [...stealTiles, lastDiscard.tile];
+                    // 数字でもソート
+                    meld.sort((a, b) => a.number - b.number);
+                    player.melds.push(meld);
+
                     sortHand(player.hand);
 
                     const discarder = lastDiscard.player;
@@ -251,9 +266,13 @@ function sendHand(player) {
         type: "hand",
         hand: player.hand,
         drawTile: player.drawTile,
+        melds: player.melds,
         opponentCount: opponent
             ? opponent.hand.length + (opponent.drawTile ? 1 : 0)
-            : 0
+            : 0,
+        opponentMelds: opponent
+            ? opponent.melds
+            : []
     }));
 }
 
@@ -273,9 +292,12 @@ function canSteal(player) { // 横取りできるかどうか
         return false;
     }
 
-    const count = player.hand.filter(tile =>
-        tile.character === lastDiscard.tile.character
-    ).length;
+    let count = player.hand.filter(tile =>
+            tile.character === lastDiscard.tile.character
+        ).length;
+    if (player.drawTile && player.drawTile.character === lastDiscard.tile.character) {
+        count++;
+    }
     return count >= 2;
 }
 
@@ -291,6 +313,7 @@ function sendTurn() {
 function dealHand(player) { // 自動配牌
     player.hand = [];
     player.drawTile = null;
+    player.melds = [];
 
     for (let i = 0; i < 8; i++) {
         if (deck.length === 0) break;
@@ -312,7 +335,7 @@ function startGame() {
         sendHand(player);
     });
     gameStarted = true;
-    
+
     broadcast({
         type: "clearDiscard"
     });

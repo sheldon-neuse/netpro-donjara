@@ -19,6 +19,8 @@ const drawTileArea = document.getElementById("drawTileArea"); // ツモ牌
 const opponentHand = document.getElementById("opponentHand"); // 相手の持ち牌
 const stealButton = document.getElementById("stealButton"); // 横取りボタン
 const passStealButton = document.getElementById("passStealButton"); // 横取りしないボタン
+const meldArea = document.getElementById("meldArea");
+const opponentMeldArea = document.getElementById("opponentMeldArea");
 let myTurn = false; // クライアントでもターン管理
 
 function createTileElement(tile){ // 牌を表示する
@@ -98,6 +100,32 @@ ws.onmessage = (event) => {
         case "hand":
             stealButton.style.display = "none";
             passStealButton.style.display = "none";
+
+            // 横取りした牌をクリックさせない
+            meldArea.innerHTML = "";
+            msg.melds.forEach(group => {
+                const row = document.createElement("div");
+                row.className = "meld-group";
+                group.forEach(tile => {
+                    const div = createTileElement(tile);
+                    div.classList.add("meld");
+                    row.appendChild(div);
+                });
+                meldArea.appendChild(row);
+            });
+
+            // 相手の横取り牌
+            opponentMeldArea.innerHTML = "";
+            msg.opponentMelds.forEach(group => {
+                const row = document.createElement("div");
+                row.className = "meld-group";
+                group.forEach(tile => {
+                    const div = createTileElement(tile);
+                    div.classList.add("opponent-tile");
+                    row.appendChild(div);
+                });
+                opponentMeldArea.appendChild(row);
+            });
 
             myHand.innerHTML = "";
             drawTileArea.innerHTML = "";
