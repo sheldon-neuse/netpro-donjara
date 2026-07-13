@@ -63,7 +63,8 @@ app.ws("/ws", (ws, req) => {
         name: "名無し",
         hand: [],
         drawTile: null,
-        melds: []
+        melds: [],
+        reach: false
     });
 
     broadcastPlayerCount();
@@ -92,6 +93,9 @@ app.ws("/ws", (ws, req) => {
                 {
                     const player = players.find(p => p.ws === ws);
                     if (player !== players[currentTurn] || waitingSteal) {
+                        break;
+                    }
+                    if(player.reach && msg.index !== -1) {
                         break;
                     }
 
@@ -202,18 +206,48 @@ app.ws("/ws", (ws, req) => {
                     }
 
                     const discarder = lastDiscard.player;
-
                     waitingSteal = false;
-
                     currentTurn = (currentTurn + 1) % players.length;
-
                     drawTile(players[currentTurn]);
-
                     updateHands();
-
                     lastDiscard = null;
-
                     sendTurn();
+                }
+                break;
+
+            case "reach":
+                {
+                    const player = players.find(p => p.ws === ws);
+                    if (!player) {
+                        break;
+                    }
+                    // リーチできるか再確認
+                    if (!canReach(player)) {
+                        break;
+                    }
+                    reach(player);
+                    // リーチした本人だけボタンを消す
+                    player.ws.send(JSON.stringify({
+                        type: "reached"
+                    }));
+                }
+                break;
+
+            case "win":
+                {
+                    const player = players.find(p => p.ws === ws);
+                    if (!player) {
+                        break;
+                    }
+                    // 上がれるか再確認
+                    if (!canWin(player)) {
+                        break;
+                    }
+                    broadcast({
+                        type: "win",
+                        winner: player.name
+                    });
+                    gameStarted = false;
                 }
                 break;
         }
@@ -314,6 +348,7 @@ function dealHand(player) { // 自動配牌
     player.hand = [];
     player.drawTile = null;
     player.melds = [];
+    player.reach = false;
 
     for (let i = 0; i < 8; i++) {
         if (deck.length === 0) break;
@@ -362,9 +397,77 @@ function drawTile(player) { // ツモる
     sendHand(player);
 }
 
+function countGroups(tiles) { // 揃っている牌をカウントする
+    const count = {};
+    tiles.forEach(tile => {
+        count[tile.character] = (count[tile.character] || 0) + 1;
+    });
+    let groups = 0;
+    for (const c of Object.values(count)) {
+        groups += Math.floor(c / 3);
+    }
+    return groups;
+}
+
+function canReach(player) { // リーチできるかどうか
+    if (player.reach) {
+        return false;
+    }
+    const tiles = [...player.hand];
+    if (player.drawTile) {
+        tiles.push(player.drawTile);
+    }
+    const groups = countGroups(tiles);
+    if (player.melds.length + groups !== 2) {
+        return false;
+    }
+    // 各絵柄の枚数を数える
+    const counts = {};
+    tiles.forEach(tile => {
+        counts[tile.character] = (counts[tile.character] || 0) + 1;
+    });
+    // 組を除いた余りが2枚あるか調べる
+    for (const count of Object.values(counts)) {
+        if (count % 3 === 2) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function reach(player) {
+    player.reach = true;
+    broadcast({
+        type: "reach",
+        player: player.name
+    })
+}
+
+function canWin(player) { // 勝ち条件の判定
+    if (!player.reach) {
+        return false;
+    }
+    const tiles = [...player.hand];
+    if (player.drawTile) {
+        tiles.push(player.drawTile);
+    }
+    return player.melds.length + countGroups(tiles) === 3;
+}
+
 function updateHands() {
-    // 両者の画面を更新
-    players.forEach(sendHand);
+    players.forEach(player => {
+        sendHand(player);
+        if (canReach(player)) {
+            player.ws.send(JSON.stringify({
+                type: "canReach"
+            }));
+        }
+        if (canWin(player)) {
+            player.ws.send(JSON.stringify({
+                type: "canWin"
+            }));
+        }
+    });
 }
 
 initDeck();

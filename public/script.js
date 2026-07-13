@@ -19,11 +19,13 @@ const drawTileArea = document.getElementById("drawTileArea"); // ツモ牌
 const opponentHand = document.getElementById("opponentHand"); // 相手の持ち牌
 const stealButton = document.getElementById("stealButton"); // 横取りボタン
 const passStealButton = document.getElementById("passStealButton"); // 横取りしないボタン
-const meldArea = document.getElementById("meldArea");
-const opponentMeldArea = document.getElementById("opponentMeldArea");
+const meldArea = document.getElementById("meldArea"); // 自分の横取りエリア
+const opponentMeldArea = document.getElementById("opponentMeldArea"); // 相手の横取りエリア
+const reachButton = document.getElementById("reachButton"); // リーチボタン
+const winButton = document.getElementById("winButton"); // ドンジャラボタン
 let myTurn = false; // クライアントでもターン管理
 
-function createTileElement(tile){ // 牌を表示する
+function createTileElement(tile) { // 牌を表示する
     const div = document.createElement("div");
     div.className = "tile";
     const number = document.createElement("div");
@@ -40,7 +42,7 @@ function createTileElement(tile){ // 牌を表示する
 function addTileToHand(tile, index) { // 牌のクリック処理
     const div = createTileElement(tile);
     div.onclick = () => {
-        if(!myTurn){
+        if (!myTurn) {
             return;
         }
         ws.send(JSON.stringify({ // サーバーに捨てる牌を送る
@@ -86,6 +88,24 @@ passStealButton.onclick = () => {
     passStealButton.style.display = "none";
 };
 
+reachButton.onclick = () => {
+    // リーチボタンを押したとき
+    ws.send(JSON.stringify({
+        type: "reach"
+    }));
+
+    reachButton.style.display = "none";
+};
+
+winButton.onclick = () => {
+    // ドンジャラボタンを押したとき
+    ws.send(JSON.stringify({
+        type: "win"
+    }));
+
+    winButton.style.display = "none";
+};
+
 ws.onmessage = (event) => {
     // サーバからws.send(...)されるとここ
     const msg = JSON.parse(event.data); // JSONをJavaScriptのオブジェクトへ変換
@@ -100,6 +120,8 @@ ws.onmessage = (event) => {
         case "hand":
             stealButton.style.display = "none";
             passStealButton.style.display = "none";
+            reachButton.style.display = "none";
+            winButton.style.display = "none";
 
             // 横取りした牌をクリックさせない
             meldArea.innerHTML = "";
@@ -178,16 +200,41 @@ ws.onmessage = (event) => {
             break;
 
         case "canSteal":
-            if(!myTurn) {
+            if (!myTurn) {
                 stealButton.style.display = "inline-block";
                 passStealButton.style.display = "inline-block";
             }
             break;
 
-            case "clearDiscard":
-                myDiscardArea.innerHTML = "";
-                opponentDiscardArea.innerHTML = "";
-                break;
+        case "canReach":
+            reachButton.style.display = "inline-block";
+            break;
+
+        case "canWin":
+            winButton.style.display = "inline-block";
+            break;
+
+        case "reach":
+            alert(`${msg.player}がリーチしました！`);
+            break;
+
+        case "reached":
+            reachButton.style.display = "none";
+            break;
+
+        case "win":
+            alert(`${msg.winner}の勝ちです！`);
+
+            stealButton.style.display = "none";
+            passStealButton.style.display = "none";
+            reachButton.style.display = "none";
+            winButton.style.display = "none";
+            break;
+
+        case "clearDiscard":
+            myDiscardArea.innerHTML = "";
+            opponentDiscardArea.innerHTML = "";
+            break;
 
         case "gameEnd":
             alert("相手が切断しました");

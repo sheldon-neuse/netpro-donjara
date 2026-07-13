@@ -78,6 +78,16 @@
     gap:10px;
 }
 
+#stealButton,
+#passStealButton,
+#reachButton,
+#winButton{
+    margin-top:15px;
+    margin-right:8px;
+    padding:8px 18px;
+    font-size:16px;
+}
+
 .tile.cat {
     background: #ff9999;
 }
