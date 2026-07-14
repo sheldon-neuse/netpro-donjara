@@ -25,6 +25,7 @@ const opponentMeldArea = document.getElementById("opponentMeldArea"); // 相手�
 const reachButton = document.getElementById("reachButton"); // リーチボタン
 const winButton = document.getElementById("winButton"); // ドンジャラボタン
 let myTurn = false; // クライアントでもターン管理
+let reached = false; // リーチ状態を管理
 
 function createTileElement(tile) { // 牌を表示する
     const div = document.createElement("div");
@@ -43,7 +44,7 @@ function createTileElement(tile) { // 牌を表示する
 function addTileToHand(tile, index) { // 牌のクリック処理
     const div = createTileElement(tile);
     div.onclick = () => {
-        if (!myTurn) {
+        if (!myTurn || reached) {
             return;
         }
         ws.send(JSON.stringify({ // サーバーに捨てる牌を送る
@@ -67,6 +68,19 @@ function updateOpponentHand(count) { // 相手の裏面になっている牌の�
         }
         opponentHand.appendChild(div);
     }
+}
+
+function resetGameUI() {
+    reached = false;
+    myTurn = false;
+
+    stealButton.style.display = "none";
+    passStealButton.style.display = "none";
+    reachButton.style.display = "none";
+    winButton.style.display = "none";
+
+    myDiscardArea.innerHTML = "";
+    opponentDiscardArea.innerHTML = "";
 }
 
 stealButton.onclick = () => {
@@ -220,6 +234,7 @@ ws.onmessage = (event) => {
             break;
 
         case "reached":
+            reached = true;
             reachButton.style.display = "none";
             break;
 
@@ -243,6 +258,15 @@ ws.onmessage = (event) => {
 
         case "drawGame":
             alert("山札がなくなりました。引き分けです。");
+            break;
+
+        case "newGame":
+            reached = false;
+
+            stealButton.style.display = "none";
+            passStealButton.style.display = "none";
+            reachButton.style.display = "none";
+            winButton.style.display = "none";
             break;
     }
 };

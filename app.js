@@ -95,6 +95,10 @@ app.ws("/ws", (ws, req) => {
                     if (player !== players[currentTurn] || waitingSteal) {
                         break;
                     }
+
+                    if(player.reach && msg.index !== -1){
+                        break;
+                    }
                     
                     discardTile(player, msg.index);
 
@@ -331,6 +335,9 @@ function startGame() {
     sendTurn();
 
     drawTile(players[currentTurn]); // 親のプレイヤーが最初にツモる
+    broadcast({
+        type: "newGame"
+    });
 }
 
 function drawTile(player) { // ツモる
