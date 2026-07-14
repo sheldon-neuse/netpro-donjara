@@ -24,6 +24,7 @@ const meldArea = document.getElementById("meldArea"); // 自分の横取りエ�
 const opponentMeldArea = document.getElementById("opponentMeldArea"); // 相手の横取りエリア
 const reachButton = document.getElementById("reachButton"); // リーチボタン
 const winButton = document.getElementById("winButton"); // ドンジャラボタン
+const cutin = document.getElementById("cutin");
 let myTurn = false; // クライアントでもターン管理
 let reached = false; // リーチ状態を管理
 
@@ -70,7 +71,17 @@ function updateOpponentHand(count) { // 相手の裏面になっている牌の�
     }
 }
 
-function resetGameUI() {
+function showCutin(text, type) { // リーチ時などのカットイン演出
+    cutin.textContent = text;
+    cutin.className = "";
+    cutin.classList.add("show");
+    cutin.classList.add(type);
+    setTimeout(() => {
+        cutin.classList.remove("show");
+    }, 2000);
+}
+
+function resetGameUI() { // UIをリセットする
     reached = false;
     myTurn = false;
 
@@ -230,7 +241,7 @@ ws.onmessage = (event) => {
             break;
 
         case "reach":
-            alert(`${msg.player}がリーチしました！`);
+            showCutin("リーチ！", "reach");
             break;
 
         case "reached":
@@ -239,7 +250,7 @@ ws.onmessage = (event) => {
             break;
 
         case "win":
-            alert(`${msg.winner}の勝ちです！`);
+            showCutin("ドンジャラ！", "win");
 
             // もし勝者が相手だった場合、相手の手牌をオープンにする
             if (msg.winner !== myName) {

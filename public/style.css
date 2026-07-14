@@ -246,3 +246,61 @@ section {
     }
 
 }
+
+#cutin {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0,0,0,0.45);
+
+    font-size: 80px;
+    font-weight: bold;
+    color: white;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: opacity .3s;
+    z-index: 9999;
+}
+
+#cutin.show {
+    opacity: 1;
+}
+
+#cutin.reach{
+    color:#ffe600;
+    text-shadow:
+        0 0 20px orange,
+        0 0 40px red;
+}
+
+#cutin.win{
+    color:#ff4040;
+    text-shadow:
+        0 0 20px yellow,
+        0 0 40px red;
+}
+
+@keyframes cutinPop {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.15);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+#cutin.show {
+    animation: cutinPop .4s ease;
+}
