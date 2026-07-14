@@ -29,6 +29,7 @@ const cutinText = document.getElementById("cutinText"); // カットインのテ
 const cutinImages = document.getElementById("cutinImages"); // カットインの画像
 const resultOverlay = document.getElementById("resultOverlay"); // ゲーム終了時のフェード
 const resultText = document.getElementById("resultText"); // ゲーム終了時のテキスト
+const resultSub = document.getElementById("resultSub");
 let myTurn = false; // クライアントでもターン管理
 let reached = false; // リーチ状態を管理
 
@@ -75,35 +76,48 @@ function updateOpponentHand(count) { // 相手の裏面になっている牌の�
     }
 }
 
-function showCutin(text, type, characters = []) {
+function showCutin(text, type, characters = [], callback = null) {
     // リーチ時などのカットイン演出
     cutin.className = "";
     cutinText.textContent = text;
-
     cutinImages.innerHTML = "";
 
-    // キャラクター画像を追加
     characters.forEach(character => {
         const img = document.createElement("img");
         img.src = `images/${character}.png`;
         cutinImages.appendChild(img);
     });
+
     cutin.classList.add("show", type);
+
     setTimeout(() => {
         cutin.classList.remove("show");
         cutinImages.innerHTML = "";
+
+        if (callback) callback();
+
     }, 2000);
 }
 
 function showResult(win) {
     // ゲーム結果の表示
-    resultText.textContent = win ? "YOU WIN!!" : "YOU LOSE...";
     resultText.className = win ? "win" : "lose";
-
+    resultText.textContent =
+        win ? "YOU WIN!!" : "YOU LOSE...";
+    resultSub.textContent =
+        win ? "★ PERFECT ★" : "";
     resultOverlay.classList.add("show");
+    // 勝ったときだけ紙吹雪
+    if (win) {
+        confetti({
+            particleCount: 180,
+            spread: 90,
+            origin: { y: 0.6 }
+        });
+    }
     setTimeout(() => {
         resultOverlay.classList.remove("show");
-    }, 2500);
+    }, 3000);
 }
 
 function resetGameUI() { // UIをリセットする
@@ -275,7 +289,14 @@ ws.onmessage = (event) => {
             break;
 
         case "win":
-            showCutin("ドンジャラ！", "win", msg.characters);
+            showCutin(
+                "ドンジャラ！",
+                "win",
+                msg.characters,
+                () => {
+                    showResult(msg.winner === myName);
+                }
+            );
             setTimeout(() => {
                 showResult(msg.winner === myName);
             }, 2200);
