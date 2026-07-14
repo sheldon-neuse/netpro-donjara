@@ -268,10 +268,6 @@ section {
     z-index: 9999;
 }
 
-#cutin.show {
-    opacity: 1;
-}
-
 #cutin.reach{
     color:#ffe600;
     text-shadow:
@@ -302,5 +298,6 @@ section {
 }
 
 #cutin.show {
+    opacity: 1;
     animation: cutinPop .4s ease;
 }
