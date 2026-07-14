@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,26 +56,28 @@
     <section id="player">
       <h2>自分</h2>
 
-      <button id="stealButton" style="display:none;">
-        横取りする
-      </button>
+      <div class="button-container">
+        <button id="stealButton" style="display:none;">
+          横取りする
+        </button>
 
-      <button id="passStealButton" style="display:none;">
-        横取りしない
-      </button>
+        <button id="passStealButton" style="display:none;">
+          横取りしない
+        </button>
 
-      <button id="reachButton" style="display:none;">
-        リーチ
-      </button>
-      
-      <button id="winButton" style="display:none;">
-        ドンジャラ！
-      </button>
+        <button id="reachButton" style="display:none;">
+          リーチ
+        </button>
 
-      <div class="hand" id="myHand">
+        <button id="winButton" style="display:none;">
+          ドンジャラ！
+        </button>
       </div>
 
-      <div id="drawTileArea"></div>
+      <div class="player-hands-container">
+        <div class="hand" id="myHand"></div>
+        <div id="drawTileArea"></div>
+      </div>
 
       <h3>自分の横取り牌</h3>
       <div id="meldArea"></div>
@@ -86,4 +89,5 @@
   <script src="script.js"></script>
 
 </body>
+
 </html>
