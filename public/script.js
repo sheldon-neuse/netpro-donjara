@@ -1,5 +1,4 @@
-const protocol = location.protocol === "https:" ? "wss" : "ws";
-const ws = new WebSocket(`${protocol}://${location.host}/ws`);
+let ws;
 let myName = "";
 ws.onopen = () => {
     const name = prompt("名前を入力してください") || "名無し";
@@ -12,7 +11,11 @@ ws.onopen = () => {
         name: name
     }))
 };
-const myHand = document.getElementById("myHand");
+const titleScreen = document.getElementById("titleScreen"); // タイトル画面
+const gameScreen = document.getElementById("gameScreen"); // ゲーム画面
+const startButton = document.getElementById("startButton"); // スタートボタン
+const nameInput = document.getElementById("nameInput"); // 名前入力欄
+const myHand = document.getElementById("myHand"); // 手札
 const playerName = document.getElementById("playerName"); // プレイヤー名
 const myDiscardArea = document.getElementById("myDiscardArea"); // 自分の捨て牌
 const opponentDiscardArea = document.getElementById("opponentDiscardArea"); // 相手の捨て牌
@@ -133,6 +136,27 @@ function resetGameUI() { // UIをリセットする
     opponentDiscardArea.innerHTML = "";
 }
 
+startButton.onclick = () => {
+    // スタートボタンを押したとき
+    const name = nameInput.value.trim() || "名無し";
+    titleScreen.style.display = "none";
+    gameScreen.style.display = "block";
+    connectServer(name);
+};
+
+nameInput.addEventListener("input", () => {
+    // 入力されたらスタートボタンを表示する。
+    startButton.disabled =
+        nameInput.value.trim() === "";
+});
+
+nameInput.addEventListener("keydown", e => {
+    // Enterキーでも開始
+    if(e.key === "Enter" && !startButton.disabled){
+        startButton.click();
+    }
+});
+
 stealButton.onclick = () => {
     // 横取りボタンを押したとき
     ws.send(JSON.stringify({
@@ -171,181 +195,199 @@ winButton.onclick = () => {
     winButton.style.display = "none";
 };
 
-ws.onmessage = (event) => {
-    // サーバからws.send(...)されるとここ
-    const msg = JSON.parse(event.data); // JSONをJavaScriptのオブジェクトへ変換
+function connectServer(name) {
 
-    switch (msg.type) {
+    const protocol = location.protocol === "https:" ? "wss" : "ws";
+    ws = new WebSocket(`${protocol}://${location.host}/ws`);
 
-        case "count":
-            document.getElementById("playerCount").textContent =
-                `接続人数：${msg.count}人`;
-            break;
+    ws.onopen = () => {
+        playerName.textContent = `名前：${name}`;
+        myName = name;
 
-        case "hand":
-            stealButton.style.display = "none";
-            passStealButton.style.display = "none";
-            reachButton.style.display = "none";
-            winButton.style.display = "none";
+        ws.send(JSON.stringify({
+            type: "username",
+            name: name
+        }));
+    };
 
-            // 横取りした牌をクリックさせない
-            meldArea.innerHTML = "";
-            msg.melds.forEach(group => {
-                const row = document.createElement("div");
-                row.className = "meld-group";
-                group.forEach(tile => {
-                    const div = createTileElement(tile);
-                    div.classList.add("meld");
-                    row.appendChild(div);
+    ws.onmessage = (event) => {
+        // サーバからws.send(...)されるとここ
+        const msg = JSON.parse(event.data); // JSONをJavaScriptのオブジェクトへ変換
+
+        switch (msg.type) {
+
+            case "count":
+                document.getElementById("playerCount").textContent =
+                    `接続人数：${msg.count}人`;
+                break;
+
+            case "hand":
+                stealButton.style.display = "none";
+                passStealButton.style.display = "none";
+                reachButton.style.display = "none";
+                winButton.style.display = "none";
+
+                // 横取りした牌をクリックさせない
+                meldArea.innerHTML = "";
+                msg.melds.forEach(group => {
+                    const row = document.createElement("div");
+                    row.className = "meld-group";
+                    group.forEach(tile => {
+                        const div = createTileElement(tile);
+                        div.classList.add("meld");
+                        row.appendChild(div);
+                    });
+                    meldArea.appendChild(row);
                 });
-                meldArea.appendChild(row);
-            });
 
-            // 相手の横取り牌
-            opponentMeldArea.innerHTML = "";
-            msg.opponentMelds.forEach(group => {
-                const row = document.createElement("div");
-                row.className = "meld-group";
-                group.forEach(tile => {
-                    const div = createTileElement(tile);
+                // 相手の横取り牌
+                opponentMeldArea.innerHTML = "";
+                msg.opponentMelds.forEach(group => {
+                    const row = document.createElement("div");
+                    row.className = "meld-group";
+                    group.forEach(tile => {
+                        const div = createTileElement(tile);
+                        div.classList.add("opponent-tile");
+                        row.appendChild(div);
+                    });
+                    opponentMeldArea.appendChild(row);
+                });
+
+                myHand.innerHTML = "";
+                drawTileArea.innerHTML = "";
+                msg.hand.forEach((tile, index) => {
+                    addTileToHand(tile, index);
+                });
+                if (msg.drawTile) {
+                    const div = createTileElement(msg.drawTile);
+                    div.classList.add("draw-tile");
+                    div.onclick = () => {
+                        if (!myTurn) {
+                            return;
+                        }
+                        ws.send(JSON.stringify({
+                            type: "discard",
+                            index: -1
+                        }));
+                    };
+                    drawTileArea.appendChild(div);
+                }
+                updateOpponentHand(msg.opponentCount);
+                break;
+
+            case "discard": {
+                const div = createTileElement(msg.tile);
+                if (msg.player === myName) {
+                    myDiscardArea.appendChild(div);
+                }
+                else {
                     div.classList.add("opponent-tile");
-                    row.appendChild(div);
-                });
-                opponentMeldArea.appendChild(row);
-            });
+                    opponentDiscardArea.appendChild(div);
+                }
+                break;
+            }
 
-            myHand.innerHTML = "";
-            drawTileArea.innerHTML = "";
-            msg.hand.forEach((tile, index) => {
-                addTileToHand(tile, index);
-            });
-            if (msg.drawTile) {
-                const div = createTileElement(msg.drawTile);
-                div.classList.add("draw-tile");
-                div.onclick = () => {
-                    if (!myTurn) {
-                        return;
+            case "removeDiscard":
+                if (msg.player === myName) {
+                    if (myDiscardArea.lastElementChild) {
+                        myDiscardArea.removeChild(myDiscardArea.lastElementChild);
                     }
-                    ws.send(JSON.stringify({
-                        type: "discard",
-                        index: -1
-                    }));
-                };
-                drawTileArea.appendChild(div);
-            }
-            updateOpponentHand(msg.opponentCount);
-            break;
-
-        case "discard": {
-            const div = createTileElement(msg.tile);
-            if (msg.player === myName) {
-                myDiscardArea.appendChild(div);
-            }
-            else {
-                div.classList.add("opponent-tile");
-                opponentDiscardArea.appendChild(div);
-            }
-            break;
-        }
-
-        case "removeDiscard":
-            if (msg.player === myName) {
-                if (myDiscardArea.lastElementChild) {
-                    myDiscardArea.removeChild(myDiscardArea.lastElementChild);
+                } else {
+                    if (opponentDiscardArea.lastElementChild) {
+                        opponentDiscardArea.removeChild(opponentDiscardArea.lastElementChild);
+                    }
                 }
-            } else {
-                if (opponentDiscardArea.lastElementChild) {
-                    opponentDiscardArea.removeChild(opponentDiscardArea.lastElementChild);
+                break;
+
+            case "turn":
+                myTurn = msg.myTurn;
+                break;
+
+            case "canSteal":
+                if (!myTurn) {
+                    stealButton.style.display = "inline-block";
+                    passStealButton.style.display = "inline-block";
                 }
-            }
-            break;
+                break;
 
-        case "turn":
-            myTurn = msg.myTurn;
-            break;
+            case "canReach":
+                reachButton.style.display = "inline-block";
+                break;
 
-        case "canSteal":
-            if (!myTurn) {
-                stealButton.style.display = "inline-block";
-                passStealButton.style.display = "inline-block";
-            }
-            break;
+            case "canWin":
+                winButton.style.display = "inline-block";
+                break;
 
-        case "canReach":
-            reachButton.style.display = "inline-block";
-            break;
+            case "reach":
+                showCutin("リーチ！", "reach");
+                break;
 
-        case "canWin":
-            winButton.style.display = "inline-block";
-            break;
+            case "reached":
+                reached = true;
+                reachButton.style.display = "none";
+                break;
 
-        case "reach":
-            showCutin("リーチ！", "reach");
-            break;
-
-        case "reached":
-            reached = true;
-            reachButton.style.display = "none";
-            break;
-
-        case "win":
-            showCutin(
-                "ドンジャラ！",
-                "win",
-                msg.characters,
-                () => {
+            case "win":
+                showCutin(
+                    "ドンジャラ！",
+                    "win",
+                    msg.characters,
+                    () => {
+                        showResult(msg.winner === myName);
+                    }
+                );
+                setTimeout(() => {
                     showResult(msg.winner === myName);
+                }, 2200);
+
+                // もし勝者が相手だった場合、相手の手牌をオープンにする
+                if (msg.winner !== myName) {
+                    opponentHand.innerHTML = ""; // 裏向きの牌を一度クリア
+
+                    // 相手の手札（8枚）を表向きで描画
+                    msg.winnerHand.forEach(tile => {
+                        const div = createTileElement(tile);
+                        div.classList.add("opponent-tile"); // 必要に応じてスタイルを調整
+                        opponentHand.appendChild(div);
+                    });
+
+                    // もし相手にツモ牌（アガリ牌）があれば、それも右側に表示する
+                    if (msg.winnerDrawTile) {
+                        const div = createTileElement(msg.winnerDrawTile);
+                        div.classList.add("opponent-tile", "draw-tile");
+                        opponentHand.appendChild(div);
+                    }
                 }
-            );
-            setTimeout(() => {
-                showResult(msg.winner === myName);
-            }, 2200);
 
-            // もし勝者が相手だった場合、相手の手牌をオープンにする
-            if (msg.winner !== myName) {
-                opponentHand.innerHTML = ""; // 裏向きの牌を一度クリア
+                stealButton.style.display = "none";
+                passStealButton.style.display = "none";
+                reachButton.style.display = "none";
+                winButton.style.display = "none";
+                break;
 
-                // 相手の手札（8枚）を表向きで描画
-                msg.winnerHand.forEach(tile => {
-                    const div = createTileElement(tile);
-                    div.classList.add("opponent-tile"); // 必要に応じてスタイルを調整
-                    opponentHand.appendChild(div);
-                });
+            case "clearDiscard":
+                myDiscardArea.innerHTML = "";
+                opponentDiscardArea.innerHTML = "";
+                break;
 
-                // もし相手にツモ牌（アガリ牌）があれば、それも右側に表示する
-                if (msg.winnerDrawTile) {
-                    const div = createTileElement(msg.winnerDrawTile);
-                    div.classList.add("opponent-tile", "draw-tile");
-                    opponentHand.appendChild(div);
-                }
-            }
+            case "gameEnd":
+                alert("相手が切断しました");
+                break;
 
-            stealButton.style.display = "none";
-            passStealButton.style.display = "none";
-            reachButton.style.display = "none";
-            winButton.style.display = "none";
-            break;
+            case "drawGame":
+                alert("山札がなくなりました。引き分けです。");
+                break;
 
-        case "clearDiscard":
-            myDiscardArea.innerHTML = "";
-            opponentDiscardArea.innerHTML = "";
-            break;
+            case "newGame":
+                reached = false;
 
-        case "gameEnd":
-            alert("相手が切断しました");
-            break;
+                stealButton.style.display = "none";
+                passStealButton.style.display = "none";
+                reachButton.style.display = "none";
+                winButton.style.display = "none";
+                break;
+        }
+    };
 
-        case "drawGame":
-            alert("山札がなくなりました。引き分けです。");
-            break;
+}
 
-        case "newGame":
-            reached = false;
-
-            stealButton.style.display = "none";
-            passStealButton.style.display = "none";
-            reachButton.style.display = "none";
-            winButton.style.display = "none";
-            break;
-    }
-};

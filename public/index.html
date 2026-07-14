@@ -4,108 +4,132 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>簡易ドンジャラ</title>
+  <title>どこドン</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+  <!-- タイトル画面 -->
+  <div id="titleScreen">
 
-  <header>
-    <h1>簡易ドンジャラ</h1>
-    <div id="status">
-      <span id="playerName">名前：---</span>
-      <span id="playerCount">接続人数：0人</span>
-    </div>
-  </header>
+    <img id="gameTitle" src="images/title.png" alt="どこでもドンジャラ">
 
-  <main>
+    <label for="nameInput" id="nameLabel">
+        プレイヤー名
+    </label>
 
-    <!-- 相手 -->
-    <section id="opponent">
-    
-      <h2>相手</h2>
-    
-      <div class="hand-row">
-    
-        <div class="hand opponent-hand" id="opponentHand"></div>
-    
-        <div class="meld-side">
-          <h3>横取り牌</h3>
-          <div id="opponentMeldArea"></div>
-        </div>
-    
-      </div>
-    
-    </section>
+    <input
+        type="text"
+        id="nameInput"
+        placeholder="名前を入力"
+        maxlength="12">
 
-    <!-- 山札・捨て牌 -->
-    <section id="center">
+    <button id="startButton" disabled>
+        ゲームスタート
+    </button>
 
-      <div class="deck">
-        <h3>山札</h3>
-      </div>
-
-      <div class="discard">
-
-        <h3>相手の捨て牌</h3>
-        <div id="opponentDiscardArea"></div>
-
-        <h3>自分の捨て牌</h3>
-        <div id="myDiscardArea"></div>
-
-      </div>
-
-    </section>
-
-    <!-- 自分 -->
-    <section id="player">
-      <h2>自分</h2>
-
-      <div class="button-container">
-        <button id="stealButton" style="display:none;">
-          横取りする
-        </button>
-
-        <button id="passStealButton" style="display:none;">
-          横取りしない
-        </button>
-
-        <button id="reachButton" style="display:none;">
-          リーチ
-        </button>
-
-        <button id="winButton" style="display:none;">
-          ドンジャラ！
-        </button>
-      </div>
-      
-      <div class="hand-row">
-      
-        <div class="player-hands-container">
-          <div class="hand" id="myHand"></div>
-          <div id="drawTileArea"></div>
-        </div>
-      
-        <div class="meld-side">
-          <h3>横取り牌</h3>
-          <div id="meldArea"></div>
-        </div>
-      
-      </div>
-
-    </section>
-
-  </main>
-
-  <div id="cutin">
-    <div id="cutinText"></div>
-    <div id="cutinImages"></div>
   </div>
 
-  <div id="resultOverlay">
-    <div id="resultText"></div>
-    <div id="resultSub"></div>
+  <!-- ゲーム画面 -->
+  <div id="gameScreen">
+
+    <header>
+      <div id="status">
+        <span id="playerName">名前：---</span>
+        <span id="playerCount">接続人数：0人</span>
+      </div>
+    </header>
+
+    <main>
+
+      <!-- 相手 -->
+      <section id="opponent">
+
+        <h2>相手</h2>
+
+        <div class="hand-row">
+
+          <div class="hand opponent-hand" id="opponentHand"></div>
+
+          <div class="meld-side">
+            <h3>横取り牌</h3>
+            <div id="opponentMeldArea"></div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- 山札・捨て牌 -->
+      <section id="center">
+
+        <div class="deck">
+          <h3>山札</h3>
+        </div>
+
+        <div class="discard">
+
+          <h3>相手の捨て牌</h3>
+          <div id="opponentDiscardArea"></div>
+
+          <h3>自分の捨て牌</h3>
+          <div id="myDiscardArea"></div>
+
+        </div>
+
+      </section>
+
+      <!-- 自分 -->
+      <section id="player">
+        <h2>自分</h2>
+
+        <div class="button-container">
+          <button id="stealButton" style="display:none;">
+            横取りする
+          </button>
+
+          <button id="passStealButton" style="display:none;">
+            横取りしない
+          </button>
+
+          <button id="reachButton" style="display:none;">
+            リーチ
+          </button>
+
+          <button id="winButton" style="display:none;">
+            ドンジャラ！
+          </button>
+        </div>
+
+        <div class="hand-row">
+
+          <div class="player-hands-container">
+            <div class="hand" id="myHand"></div>
+            <div id="drawTileArea"></div>
+          </div>
+
+          <div class="meld-side">
+            <h3>横取り牌</h3>
+            <div id="meldArea"></div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+    <div id="cutin">
+      <div id="cutinText"></div>
+      <div id="cutinImages"></div>
+    </div>
+
+    <div id="resultOverlay">
+      <div id="resultText"></div>
+      <div id="resultSub"></div>
+    </div>
+
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
