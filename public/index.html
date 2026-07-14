@@ -23,14 +23,20 @@
 
     <!-- 相手 -->
     <section id="opponent">
+    
       <h2>相手</h2>
-
-      <div class="hand opponent-hand" id="opponentHand">
+    
+      <div class="hand-row">
+    
+        <div class="hand opponent-hand" id="opponentHand"></div>
+    
+        <div class="meld-side">
+          <h3>横取り牌</h3>
+          <div id="opponentMeldArea"></div>
+        </div>
+    
       </div>
-
-      <h3>相手の横取り牌</h3>
-      <div id="opponentMeldArea"></div>
-
+    
     </section>
 
     <!-- 山札・捨て牌 -->
@@ -73,14 +79,20 @@
           ドンジャラ！
         </button>
       </div>
-
-      <div class="player-hands-container">
-        <div class="hand" id="myHand"></div>
-        <div id="drawTileArea"></div>
+      
+      <div class="hand-row">
+      
+        <div class="player-hands-container">
+          <div class="hand" id="myHand"></div>
+          <div id="drawTileArea"></div>
+        </div>
+      
+        <div class="meld-side">
+          <h3>横取り牌</h3>
+          <div id="meldArea"></div>
+        </div>
+      
       </div>
-
-      <h3>自分の横取り牌</h3>
-      <div id="meldArea"></div>
 
     </section>
 

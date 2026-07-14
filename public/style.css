@@ -11,7 +11,19 @@ body {
 
 header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
+}
+
+h1 {
+    margin: 8px 0;
+}
+
+h2 {
+    margin: 4px 0;
+}
+
+h3 {
+    margin: 3px 0;
 }
 
 #status {
@@ -30,8 +42,8 @@ main {
     flex-direction: column;
     align-items: center;
     /* メインコンテンツを中央揃え */
-    gap: 30px;
-    padding: 20px;
+    gap: 12px;
+    padding: 10px;
     box-sizing: border-box;
 }
 
@@ -58,6 +70,14 @@ section {
     box-sizing: border-box;
 }
 
+.hand-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 30px;
+    width: 100%;
+}
+
 #myHand,
 #opponentHand {
     display: flex;
@@ -73,17 +93,23 @@ section {
 #meldArea,
 #opponentMeldArea {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     gap: 8px;
-    margin-top: 15px;
-    margin-left: 0;
-    width: 100%;
+    margin-top: 8px;
+    width: auto;
+}
+
+.meld-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 180px;
 }
 
 #center {
     background: #e0e4eb;
     border-radius: 15px;
-    padding: 20px;
+    padding: 10px;
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -95,7 +121,7 @@ section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 8px;
 }
 
 #myDiscardArea,
@@ -104,7 +130,7 @@ section {
     flex-wrap: wrap;
     justify-content: center;
     max-width: 600px;
-    min-height: 120px;
+    min-height: 80px;
     gap: 6px;
     background: rgba(255, 255, 255, 0.5);
     border-radius: 8px;
@@ -180,8 +206,8 @@ section {
 
 .meld-group {
     display: flex;
-    align-items: flex-end;
-    gap: 10px;
+    justify-content: center;
+    gap: 6px;
 }
 
 #stealButton,
@@ -231,6 +257,7 @@ section {
 }
 
 @media (max-width: 768px) {
+    /* pcの場合 */
 
     .tile {
         width: 55px;
@@ -245,27 +272,71 @@ section {
         font-size: 14px;
     }
 
+    .hand-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .meld-side {
+        width: 100%;
+    }
+
 }
 
-#cutin{
-    position:fixed;
-    inset:0;
+@media (min-width: 1000px) {
+    /* pcの場合 */
 
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
+    header {
+        margin-bottom: 5px;
+    }
 
-    background:rgba(0,0,0,.45);
+    main {
+        gap: 10px;
+        padding: 8px;
+    }
 
-    opacity:0;
-    pointer-events:none;
+    h1 {
+        margin: 5px 0;
+    }
 
-    transition:.3s;
-    z-index:9999;
+    h2 {
+        margin: 3px 0;
+    }
+
+    h3 {
+        margin: 2px 0;
+    }
+
+    #center {
+        padding: 8px;
+    }
+
+    #myDiscardArea,
+    #opponentDiscardArea {
+        min-height: 80px;
+    }
 }
 
-#cutinText{
+#cutin {
+    position: fixed;
+    inset: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(0, 0, 0, .45);
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: .3s;
+    z-index: 9999;
+}
+
+#cutinText {
     font-size: clamp(70px, 10vw, 140px);
     font-weight: 900;
     letter-spacing: 8px;
@@ -275,25 +346,25 @@ section {
     -webkit-text-stroke: 3px white;
 }
 
-#cutin.reach{
-    color:#ffe600;
+#cutin.reach {
+    color: #ffe600;
     text-shadow:
         0 0 20px orange,
         0 0 40px red;
 }
 
-#cutin.reach #cutinText{
+#cutin.reach #cutinText {
     font-size: clamp(70px, 9vw, 130px);
 }
 
-#cutin.win{
-    color:#ff4040;
+#cutin.win {
+    color: #ff4040;
     text-shadow:
         0 0 20px yellow,
         0 0 40px red;
 }
 
-#cutin.win #cutinText{
+#cutin.win #cutinText {
     font-size: clamp(90px, 12vw, 180px);
 }
 
@@ -302,10 +373,12 @@ section {
         transform: scale(0.3);
         opacity: 0;
     }
+
     60% {
         transform: scale(1.15);
         opacity: 1;
     }
+
     100% {
         transform: scale(1);
         opacity: 1;
@@ -317,31 +390,31 @@ section {
     animation: cutinPop .4s ease;
 }
 
-#cutinImages{
-    display:flex;
-    justify-content:center;
-    gap:40px;
-    margin-top:25px;
+#cutinImages {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 25px;
 }
 
-#cutinImages img{
-    width:110px;
+#cutinImages img {
+    width: 110px;
     filter: drop-shadow(0 0 15px white);
     animation: popCharacter .6s ease;
 }
 
-@keyframes popCharacter{
-    0%{
-        transform:scale(0) rotate(-30deg);
-        opacity:0;
+@keyframes popCharacter {
+    0% {
+        transform: scale(0) rotate(-30deg);
+        opacity: 0;
     }
 
-    70%{
-        transform:scale(1.2) rotate(10deg);
-        opacity:1;
+    70% {
+        transform: scale(1.2) rotate(10deg);
+        opacity: 1;
     }
 
-    100%{
-        transform:scale(1);
+    100% {
+        transform: scale(1);
     }
 }
