@@ -56,21 +56,16 @@ section {
     margin-top: 10px;
 }
 
-#myHand {
+#myHand,
+#opponentHand {
     display: flex;
     justify-content: center;
-    gap: 6px;
+    gap: clamp(2px, 0.5vw, 6px);
 }
 
 #drawTileArea {
     display: inline-block;
-    margin-left: 15px;
-}
-
-#opponentHand {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
+    margin-left: clamp(5px, 2vw, 15px);
 }
 
 #meldArea,
@@ -125,8 +120,9 @@ section {
 }
 
 .tile {
-    width: 90px;
-    height: 120px;
+    width: clamp(55px, 6vw, 90px);
+    height: calc(clamp(55px, 6vw, 90px) * 1.33);
+
     border: 2px solid #333;
     border-radius: 10px;
     margin: 4px;
@@ -138,8 +134,8 @@ section {
 
 .tile img {
     width: 100%;
-    height: 90px;
-    margin-top: 15px;
+    height: 75%;
+    margin-top: 15%;
     object-fit: contain;
 }
 
@@ -147,7 +143,7 @@ section {
     position: absolute;
     top: 4px;
     left: 6px;
-    font-size: 20px;
+    font-size: clamp(14px, 1.6vw, 20px);
     font-weight: bold;
     z-index: 2;
 }
@@ -166,7 +162,7 @@ section {
 }
 
 .tile.back.draw-tile {
-    margin-left: 60px;
+    margin-left: clamp(20px, 4vw, 60px);
 }
 
 #meldArea.tile {
