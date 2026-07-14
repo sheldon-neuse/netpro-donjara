@@ -196,7 +196,7 @@ app.ws("/ws", (ws, req) => {
                     }
 
                     // 上がれるか再確認
-                    if (!canWin(player)) {
+                    if (!(canWin(player) || canRon(player))) {
                         break;
                     }
 
@@ -220,12 +220,20 @@ app.ws("/ws", (ws, req) => {
                             characters.push(character);
                         }
                     }
+
+                    let winnerHand = [...player.hand];
+                    let winnerDrawTile = player.drawTile;
+
+                    if(!player.drawTile && canRon(player)) {
+                        winnerDrawTile = lastDiscard.tile;
+                    }
+
                     broadcast({
                         type: "win",
                         winner: player.name,
-                        winnerHand: player.hand,
-                        winnerDrawTile: player.drawTile,
-                        characters: characters
+                        winnerHand,
+                        winnerDrawTile,
+                        characters
                     });
                     gameStarted = false;
                 }
@@ -302,14 +310,14 @@ function sortHand(hand) { // 持ち牌ソート
 }
 
 function canSteal(player) { // 横取りできるかどうか
-    if (!player || !lastDiscard) {
+    if (!player || !lastDiscard || player.reach) {
         return false;
     }
-
     let count = player.hand.filter(tile =>
         tile.character === lastDiscard.tile.character
     ).length;
-    if (player.drawTile && player.drawTile.character === lastDiscard.tile.character) {
+    if (player.drawTile &&
+        player.drawTile.character === lastDiscard.tile.character) {
         count++;
     }
     return count >= 2;
@@ -407,15 +415,27 @@ function discardTile(player, index) {
         tile: discardedTile,
         player: player.name
     });
+
     const opponent = players.find(p => p !== player);
-    if (opponent && canSteal(opponent)) {
-        waitingSteal = true;
-        updateHands();
-        opponent.ws.send(JSON.stringify({
-            type: "canSteal",
-            tile: discardedTile
-        }));
-        return true;
+    if (opponent) {
+        // リーチ中ならロン判定
+        if (canRon(opponent)) {
+            updateHands();
+            opponent.ws.send(JSON.stringify({
+                type: "canWin"
+            }));
+            return true;
+        }
+        // まだリーチしていないなら横取り判定
+        if (canSteal(opponent)) {
+            waitingSteal = true;
+            updateHands();
+            opponent.ws.send(JSON.stringify({
+                type: "canSteal",
+                tile: discardedTile
+            }));
+            return true;
+        }
     }
     waitingSteal = false;
     currentTurn = (currentTurn + 1) % players.length;
@@ -520,6 +540,16 @@ function canWin(player) { // 勝ち条件の判定
     if (player.drawTile) {
         tiles.push(player.drawTile);
     }
+    return player.melds.length + countGroups(tiles) === 3;
+}
+
+function canRon(player) { // ロンできるか
+    if (!player.reach || !lastDiscard) {
+        return false;
+    }
+    const tiles = [...player.hand];
+    // 相手の捨て牌を加える
+    tiles.push(lastDiscard.tile);
     return player.melds.length + countGroups(tiles) === 3;
 }
 
