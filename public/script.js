@@ -1,16 +1,5 @@
 let ws;
 let myName = "";
-ws.onopen = () => {
-    const name = prompt("名前を入力してください") || "名無し";
-
-    playerName.textContent = `名前：${name}`;
-    myName = name;
-
-    ws.send(JSON.stringify({ // JavaScriptのオブジェクトをJSON形式の文字列に変換する
-        type: "username",
-        name: name
-    }))
-};
 const titleScreen = document.getElementById("titleScreen"); // タイトル画面
 const gameScreen = document.getElementById("gameScreen"); // ゲーム画面
 const startButton = document.getElementById("startButton"); // スタートボタン
