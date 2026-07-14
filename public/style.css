@@ -53,14 +53,16 @@ section {
     align-items: center;
     justify-content: center;
     width: 100%;
-    margin-top: 10px;
+    overflow-x: auto;
+    padding: 0 10px;
+    box-sizing: border-box;
 }
 
 #myHand,
 #opponentHand {
     display: flex;
-    justify-content: center;
-    gap: clamp(2px, 0.5vw, 6px);
+    flex-wrap: nowrap;
+    width: max-content;
 }
 
 #drawTileArea {
@@ -226,4 +228,21 @@ section {
 
 .tile.pig {
     background: #55ff55;
+}
+
+@media (max-width: 768px) {
+
+    .tile {
+        width: 55px;
+        height: 73px;
+    }
+
+    .tile img {
+        height: 55px;
+    }
+
+    .tile-number {
+        font-size: 14px;
+    }
+
 }
