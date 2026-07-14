@@ -96,10 +96,10 @@ app.ws("/ws", (ws, req) => {
                         break;
                     }
 
-                    if(player.reach && msg.index !== -1){
+                    if (player.reach && msg.index !== -1) {
                         break;
                     }
-                    
+
                     discardTile(player, msg.index);
 
                 }
@@ -172,21 +172,18 @@ app.ws("/ws", (ws, req) => {
             case "reach":
                 {
                     const player = players.find(p => p.ws === ws);
-                    if (!player) {
-                        break;
-                    }
-                    // リーチできるか再確認
-                    if (!canReach(player)) {
+                    if (!player || !canReach(player)) {
                         break;
                     }
                     reach(player);
                     player.ws.send(JSON.stringify({
                         type: "reached"
                     }));
-                    const index = getReachDiscardIndex(player);
-                    if(index !== -2) {
-                        discardTile(player, index);
+                    let index = getReachDiscardIndex(player);
+                    if (index === -2) {
+                        index = -1;
                     }
+                    discardTile(player, index);
                 }
                 break;
 
@@ -259,7 +256,7 @@ function sendHand(player) {
         drawTile: player.drawTile,
         melds: player.melds,
         opponentCount: opponent
-            ? opponent.hand.length + (opponent.drawTile ? 1 : 0)
+            ? (opponent.hand.length + (opponent.drawTile ? 1 : 0))
             : 0,
         opponentMelds: opponent
             ? opponent.melds
@@ -284,8 +281,8 @@ function canSteal(player) { // 横取りできるかどうか
     }
 
     let count = player.hand.filter(tile =>
-            tile.character === lastDiscard.tile.character
-        ).length;
+        tile.character === lastDiscard.tile.character
+    ).length;
     if (player.drawTile && player.drawTile.character === lastDiscard.tile.character) {
         count++;
     }
@@ -358,6 +355,11 @@ function drawTile(player) { // ツモる
 }
 
 function discardTile(player, index) {
+    if(player.reach) { // リーチ状態のとき
+        if(index !== -1 && !player.drawTile) { // ツモ牌がない状態での打牌やツモ牌を捨てる以外の行動を制限
+            return false;
+        }
+    }
     let discardedTile;
     if (index === -1) {
         // ツモ牌を捨てる
@@ -453,27 +455,39 @@ function getReachDiscardIndex(player) { // リーチ時のいらない牌を探�
     if (player.drawTile) {
         tiles.push(player.drawTile);
     }
-    const counts = {};
+    // すべての牌の「絵柄」の枚数をカウント
+    const charCounts = {};
     tiles.forEach(tile => {
-        counts[tile.character] = (counts[tile.character] || 0) + 1;
+        charCounts[tile.character] = (charCounts[tile.character] || 0) + 1;
     });
-    // 1枚だけ余っている牌
-    const target = tiles.find(tile => counts[tile.character] % 3 === 1);
-    if (!target) {
-        return -2;
-    }
-    // ツモ牌なら
-    if (
-        player.drawTile &&
-        player.drawTile.character === target.character &&
-        player.drawTile.number === target.number
-    ) {
+    // 絵柄の枚数を3で割ったときに1余る（＝セットになっていない）絵柄を探す
+    const targetChar = Object.keys(charCounts).find(char => charCounts[char] % 3 === 1);
+    // もし見つからなければ、ツモ牌を返す（安全弁）
+    if (!targetChar) {
         return -1;
     }
-    // 手牌の何番目か
+    // その絵柄の中で「3枚組」になっていない孤立した牌（数字）を特定する
+    // ドンジャラは同牌が最大9枚（1〜9）あるため、同じ絵柄の中で数字ごとの枚数をカウント
+    const numCounts = {};
+    const sameCharTiles = tiles.filter(t => t.character === targetChar);
+    sameCharTiles.forEach(tile => {
+        numCounts[tile.number] = (numCounts[tile.number] || 0) + 1;
+    });
+    // 3で割り切れない（1枚または2枚しかない）数字の牌を探す
+    const targetNum = Object.keys(numCounts).find(num => numCounts[num] % 3 !== 0);
+    // 対象の牌（オブジェクト）を特定
+    const targetTile = sameCharTiles.find(t => t.number === Number(targetNum)) || sameCharTiles[0];
+    // ツモ牌が対象なら -1 を返す
+    if (player.drawTile &&
+        player.drawTile.character === targetTile.character &&
+        player.drawTile.number === targetTile.number) {
+        return -1;
+    }
+
+    // 手札の何番目にあるかを探してインデックスを返す
     return player.hand.findIndex(tile =>
-        tile.character === target.character &&
-        tile.number === target.number
+        tile.character === targetTile.character &&
+        tile.number === targetTile.number
     );
 }
 
