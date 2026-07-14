@@ -180,7 +180,7 @@ app.ws("/ws", (ws, req) => {
                         type: "reached"
                     }));
                     let index = getReachDiscardIndex(player);
-                    if (index === -2) {
+                    if (index < -1) {
                         index = -1;
                     }
                     discardTile(player, index);
@@ -355,8 +355,8 @@ function drawTile(player) { // ツモる
 }
 
 function discardTile(player, index) {
-    if(player.reach) { // リーチ状態のとき
-        if(index !== -1 && !player.drawTile) { // ツモ牌がない状態での打牌やツモ牌を捨てる以外の行動を制限
+    if(player.reach && index !== -1) { // リーチ状態のとき
+        if(!player.drawTile) { // ツモ牌がない状態での打牌やツモ牌を捨てる以外の行動を制限
             return false;
         }
     }
