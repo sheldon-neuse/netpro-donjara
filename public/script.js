@@ -125,6 +125,34 @@ function resetGameUI() { // UIをリセットする
     opponentDiscardArea.innerHTML = "";
 }
 
+function returnToTitle() { // タイトルにもどる
+    // WebSocket切断
+    if (ws) {
+        ws.close();
+        ws = null;
+    }
+
+    // ゲームUI初期化
+    resetGameUI();
+
+    myHand.innerHTML = "";
+    opponentHand.innerHTML = "";
+    drawTileArea.innerHTML = "";
+    meldArea.innerHTML = "";
+    opponentMeldArea.innerHTML = "";
+
+    playerName.textContent = "名前：---";
+    document.getElementById("playerCount").textContent = "接続人数：0人";
+
+    // 名前入力
+    nameInput.value = "";
+    startButton.disabled = true;
+
+    // 画面切替
+    gameScreen.style.display = "none";
+    titleScreen.style.display = "flex";
+}
+
 startButton.onclick = () => {
     // スタートボタンを押したとき
     const name = nameInput.value.trim() || "名無し";
@@ -348,10 +376,9 @@ function connectServer(name) {
                     }
                 }
 
-                stealButton.style.display = "none";
-                passStealButton.style.display = "none";
-                reachButton.style.display = "none";
-                winButton.style.display = "none";
+                setTimeout(() => {
+                    returnToTitle(); // タイトルへ
+                }, 5500);
                 break;
 
             case "clearDiscard":
@@ -361,10 +388,16 @@ function connectServer(name) {
 
             case "gameEnd":
                 alert("相手が切断しました");
+                setTimeout(() => {
+                    returnToTitle();
+                }, 1000);
                 break;
 
             case "drawGame":
                 alert("山札がなくなりました。引き分けです。");
+                setTimeout(() => {
+                    returnToTitle();
+                }, 1000);
                 break;
 
             case "newGame":
