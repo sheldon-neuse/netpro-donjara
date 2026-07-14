@@ -172,6 +172,10 @@ app.ws("/ws", (ws, req) => {
             case "reach":
                 {
                     const player = players.find(p => p.ws === ws);
+                    // 自分のターンではない、またはすでに牌を捨てた後（drawTileがない）なら処理しない
+                    if (player !== players[currentTurn] || !player.drawTile) {
+                        break;
+                    }
                     if (!player || !canReach(player)) {
                         break;
                     }
