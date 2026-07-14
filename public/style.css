@@ -265,6 +265,16 @@ section {
     z-index:9999;
 }
 
+#cutinText{
+    font-size: clamp(70px, 10vw, 140px);
+    font-weight: 900;
+    letter-spacing: 8px;
+    line-height: 1;
+
+    transform: skew(-10deg);
+    -webkit-text-stroke: 3px white;
+}
+
 #cutin.reach{
     color:#ffe600;
     text-shadow:
@@ -272,11 +282,19 @@ section {
         0 0 40px red;
 }
 
+#cutin.reach #cutinText{
+    font-size: clamp(70px, 9vw, 130px);
+}
+
 #cutin.win{
     color:#ff4040;
     text-shadow:
         0 0 20px yellow,
         0 0 40px red;
+}
+
+#cutin.win #cutinText{
+    font-size: clamp(90px, 12vw, 180px);
 }
 
 @keyframes cutinPop {
