@@ -276,7 +276,9 @@ ws.onmessage = (event) => {
 
         case "win":
             showCutin("ドンジャラ！", "win", msg.characters);
-            showResult(msg.winner === myName);
+            setTimeout(() => {
+                showResult(msg.winner === myName);
+            }, 2200);
 
             // もし勝者が相手だった場合、相手の手牌をオープンにする
             if (msg.winner !== myName) {
