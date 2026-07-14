@@ -200,7 +200,9 @@ app.ws("/ws", (ws, req) => {
                     }
                     broadcast({
                         type: "win",
-                        winner: player.name
+                        winner: player.name,
+                        winnerHand: player.hand,
+                        winnerDrawTile: player.drawTile
                     });
                     gameStarted = false;
                 }

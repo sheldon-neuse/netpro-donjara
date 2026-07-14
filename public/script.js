@@ -241,6 +241,25 @@ ws.onmessage = (event) => {
         case "win":
             alert(`${msg.winner}の勝ちです！`);
 
+            // もし勝者が相手だった場合、相手の手牌をオープンにする
+            if (msg.winner !== myName) {
+                opponentHand.innerHTML = ""; // 裏向きの牌を一度クリア
+
+                // 相手の手札（8枚）を表向きで描画
+                msg.winnerHand.forEach(tile => {
+                    const div = createTileElement(tile);
+                    div.classList.add("opponent-tile"); // 必要に応じてスタイルを調整
+                    opponentHand.appendChild(div);
+                });
+
+                // もし相手にツモ牌（アガリ牌）があれば、それも右側に表示する
+                if (msg.winnerDrawTile) {
+                    const div = createTileElement(msg.winnerDrawTile);
+                    div.classList.add("opponent-tile", "draw-tile");
+                    opponentHand.appendChild(div);
+                }
+            }
+
             stealButton.style.display = "none";
             passStealButton.style.display = "none";
             reachButton.style.display = "none";
