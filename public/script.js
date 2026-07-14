@@ -22,6 +22,29 @@ const cutinImages = document.getElementById("cutinImages"); // カットイン�
 const resultOverlay = document.getElementById("resultOverlay"); // ゲーム終了時のフェード
 const resultText = document.getElementById("resultText"); // ゲーム終了時のテキスト
 const resultSub = document.getElementById("resultSub");
+
+// SE群
+const seReach = new Audio("se/reach.mp3");
+const seYokodori = new Audio("se/yokodori.mp3");
+const seDonjara = new Audio("se/donjara.mp3");
+const seWinner = new Audio("se/winner.mp3");
+const seLoser = new Audio("se/loser.mp3");
+[
+    seReach,
+    seYokodori,
+    seDonjara,
+    seWinner,
+    seLoser
+].forEach(audio => {
+    audio.volume = 0.6; // 音量調整
+});
+function playSE(audio) {
+    // SEを鳴らす
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play();
+}
+
 let myTurn = false; // クライアントでもターン管理
 let reached = false; // リーチ状態を管理
 
@@ -93,6 +116,11 @@ function showCutin(text, type, characters = [], callback = null) {
 
 function showResult(win) {
     // ゲーム結果の表示
+    if(win) {
+        playSE(seWinner);
+    } else {
+        playSE(seLoser);
+    }
     resultText.className = win ? "win" : "lose";
     resultText.textContent =
         win ? "YOU WIN!!" : "YOU LOSE...";
@@ -327,6 +355,10 @@ function connectServer(name) {
                 }
                 break;
 
+            case "stealSuccess":
+                playSE(seYokodori);
+                break;
+
             case "canReach":
                 reachButton.style.display = "inline-block";
                 break;
@@ -336,6 +368,7 @@ function connectServer(name) {
                 break;
 
             case "reach":
+                playSE(seReach);
                 showCutin("リーチ！", "reach");
                 break;
 
@@ -345,6 +378,7 @@ function connectServer(name) {
                 break;
 
             case "win":
+                playSE(seDonjara);
                 showCutin(
                     "ドンジャラ！",
                     "win",

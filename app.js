@@ -143,6 +143,9 @@ app.ws("/ws", (ws, req) => {
                         type: "removeDiscard",
                         player: discarder.name
                     })
+                    broadcast({ // SE用
+                        type: "stealSuccess"
+                    })
                     lastDiscard = null;
                     // 手札更新
                     updateHands();
