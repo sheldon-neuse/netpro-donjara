@@ -1,3 +1,129 @@
+body {
+    margin: 0;
+    font-family: sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* 画面全体のセンタリング */
+    min-height: 100vh;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#status {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+main {
+    width: 100%;
+    max-width: 1000px;
+    /* 横に広がりすぎないように制限 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* メインコンテンツを中央揃え */
+    gap: 30px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* セクション内の子要素を中央揃え */
+    text-align: center;
+}
+
+#player {
+    position: relative;
+}
+
+.player-hands-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 10px;
+}
+
+#myHand {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+#drawTileArea {
+    display: inline-block;
+    margin-left: 15px;
+}
+
+#opponentHand {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+#meldArea,
+#opponentMeldArea {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+    margin-left: 0;
+    width: 100%;
+}
+
+#center {
+    background: #e0e4eb;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.deck {
+    margin-bottom: 20px;
+}
+
+.discard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+#myDiscardArea,
+#opponentDiscardArea {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 600px;
+    min-height: 120px;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
 .tile {
     width: 90px;
     height: 120px;
@@ -13,13 +139,8 @@
 .tile img {
     width: 100%;
     height: 90px;
-    margin-top:15px;
+    margin-top: 15px;
     object-fit: contain;
-}
-
-#drawTileArea{
-    display: inline-block;
-    margin-left: 30px;
 }
 
 .tile-number {
@@ -35,57 +156,44 @@
     transform: rotate(180deg);
 }
 
-.tile.back{
+.tile.back {
     background: #2d2d2d;
     border: 2px solid #000;
 }
 
-.tile.back img{
+.tile.back img {
     display: none;
 }
 
-.tile.back.draw-tile{
-    margin-left:60px;
+.tile.back.draw-tile {
+    margin-left: 60px;
 }
 
-#opponentHand{
-    display:flex;
-    justify-content:center;
-    gap:6px;
-}
-
-#meldArea{
-    display:flex;
-    gap:8px;
-    margin-top:15px;
-    margin-left:80px;
-}
-
-#meldArea.tile{
-    cursor:default;
-    opacity:0.9;
+#meldArea.tile {
+    cursor: default;
+    opacity: 0.9;
 }
 
 #meldArea .tile,
-#opponentMeldArea .tile{
-    cursor:default;
-    pointer-events:none;
+#opponentMeldArea .tile {
+    cursor: default;
+    pointer-events: none;
 }
 
-.meld-group{
-    display:flex;
-    align-items:flex-end;
-    gap:10px;
+.meld-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
 }
 
 #stealButton,
 #passStealButton,
 #reachButton,
-#winButton{
-    margin-top:15px;
-    margin-right:8px;
-    padding:8px 18px;
-    font-size:16px;
+#winButton {
+    margin-top: 15px;
+    margin-right: 8px;
+    padding: 8px 18px;
+    font-size: 16px;
 }
 
 .tile.cat {
