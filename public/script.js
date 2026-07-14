@@ -27,6 +27,8 @@ const winButton = document.getElementById("winButton"); // ドンジャラボタ
 const cutin = document.getElementById("cutin"); // カットイン演出
 const cutinText = document.getElementById("cutinText"); // カットインのテキスト
 const cutinImages = document.getElementById("cutinImages"); // カットインの画像
+const resultOverlay = document.getElementById("resultOverlay"); // ゲーム終了時のフェード
+const resultText = document.getElementById("resultText"); // ゲーム終了時のテキスト
 let myTurn = false; // クライアントでもターン管理
 let reached = false; // リーチ状態を管理
 
@@ -91,6 +93,17 @@ function showCutin(text, type, characters = []) {
         cutin.classList.remove("show");
         cutinImages.innerHTML = "";
     }, 2000);
+}
+
+function showResult(win) {
+    // ゲーム結果の表示
+    resultText.textContent = win ? "YOU WIN!!" : "YOU LOSE...";
+    resultText.className = win ? "win" : "lose";
+
+    resultOverlay.classList.add("show");
+    setTimeout(() => {
+        resultOverlay.classList.remove("show");
+    }, 2500);
 }
 
 function resetGameUI() { // UIをリセットする
@@ -263,6 +276,7 @@ ws.onmessage = (event) => {
 
         case "win":
             showCutin("ドンジャラ！", "win", msg.characters);
+            showResult(msg.winner === myName);
 
             // もし勝者が相手だった場合、相手の手牌をオープンにする
             if (msg.winner !== myName) {
