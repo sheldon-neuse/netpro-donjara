@@ -537,8 +537,21 @@ function canWin(player) { // 勝ち条件の判定
         return false;
     }
     const tiles = [...player.hand];
+    // ツモならツモ牌、ロンなら最後の捨て牌を追加
     if (player.drawTile) {
         tiles.push(player.drawTile);
+    } else if (lastDiscard) {
+        tiles.push(lastDiscard.tile);
+    }
+    const counts = {};
+    tiles.forEach(tile => {
+        counts[tile.character] = (counts[tile.character] || 0) + 1;
+    });
+    for (const character in counts) {
+        const groupCount = Math.floor(counts[character] / 3);
+        for (let i = 0; i < groupCount; i++) {
+            characters.push(character);
+        }
     }
     return player.melds.length + countGroups(tiles) === 3;
 }
