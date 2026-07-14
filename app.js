@@ -194,15 +194,38 @@ app.ws("/ws", (ws, req) => {
                     if (!player) {
                         break;
                     }
+
                     // 上がれるか再確認
                     if (!canWin(player)) {
                         break;
+                    }
+
+                    // 完成した刻子のキャラクター一覧
+                    const characters = [];
+                    // 横取りした刻子
+                    player.melds.forEach(group => {
+                        characters.push(group[0].character);
+                    });
+                    const tiles = [...player.hand];
+                    if (player.drawTile) {
+                        tiles.push(player.drawTile);
+                    }
+                    const counts = {};
+                    tiles.forEach(tile => {
+                        counts[tile.character] = (counts[tile.character] || 0) + 1;
+                    });
+                    for (const character in counts) {
+                        const groupCount = Math.floor(counts[character] / 3);
+                        for (let i = 0; i < groupCount; i++) {
+                            characters.push(character);
+                        }
                     }
                     broadcast({
                         type: "win",
                         winner: player.name,
                         winnerHand: player.hand,
-                        winnerDrawTile: player.drawTile
+                        winnerDrawTile: player.drawTile,
+                        characters: characters
                     });
                     gameStarted = false;
                 }

@@ -24,7 +24,9 @@ const meldArea = document.getElementById("meldArea"); // 自分の横取りエ�
 const opponentMeldArea = document.getElementById("opponentMeldArea"); // 相手の横取りエリア
 const reachButton = document.getElementById("reachButton"); // リーチボタン
 const winButton = document.getElementById("winButton"); // ドンジャラボタン
-const cutin = document.getElementById("cutin");
+const cutin = document.getElementById("cutin"); // カットイン演出
+const cutinText = document.getElementById("cutinText"); // カットインのテキスト
+const cutinImages = document.getElementById("cutinImages"); // カットインの画像
 let myTurn = false; // クライアントでもターン管理
 let reached = false; // リーチ状態を管理
 
@@ -71,13 +73,23 @@ function updateOpponentHand(count) { // 相手の裏面になっている牌の�
     }
 }
 
-function showCutin(text, type) { // リーチ時などのカットイン演出
-    cutin.textContent = text;
+function showCutin(text, type, characters = []) {
+    // リーチ時などのカットイン演出
     cutin.className = "";
-    cutin.classList.add("show");
-    cutin.classList.add(type);
+    cutinText.textContent = text;
+
+    cutinImages.innerHTML = "";
+
+    // キャラクター画像を追加
+    characters.forEach(character => {
+        const img = document.createElement("img");
+        img.src = `images/${character}.png`;
+        cutinImages.appendChild(img);
+    });
+    cutin.classList.add("show", type);
     setTimeout(() => {
         cutin.classList.remove("show");
+        cutinImages.innerHTML = "";
     }, 2000);
 }
 
@@ -250,7 +262,7 @@ ws.onmessage = (event) => {
             break;
 
         case "win":
-            showCutin("ドンジャラ！", "win");
+            showCutin("ドンジャラ！", "win", msg.characters);
 
             // もし勝者が相手だった場合、相手の手牌をオープンにする
             if (msg.winner !== myName) {
